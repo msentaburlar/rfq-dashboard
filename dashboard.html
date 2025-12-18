@@ -1,1 +1,138 @@
-<!DOCTYPE html><html lang="de"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>RFQ Dashboard</title><script src="https://cdn.jsdelivr.net/npm/chart.js"></script><style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);min-height:100vh;padding:20px}body.dark-mode{background:linear-gradient(135deg,#1a1a2e 0%,#16213e 100%)}.container{max-width:1400px;margin:0 auto}.header{background:rgba(255,255,255,0.95);backdrop-filter:blur(10px);padding:25px;border-radius:15px;margin-bottom:25px;box-shadow:0 8px 32px rgba(31,38,135,0.37)}.header h1{color:#333;margin-bottom:10px;font-size:28px}.header p{color:#666;font-size:14px}.kpi-container{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px;margin-bottom:30px}.kpi-card{background:rgba(255,255,255,0.95);padding:25px;border-radius:15px;box-shadow:0 8px 32px rgba(31,38,135,0.37);border-left:5px solid #667eea;transition:transform 0.3s ease,box-shadow 0.3s ease}.kpi-card:hover{transform:translateY(-5px);box-shadow:0 12px 40px rgba(31,38,135,0.5)}.kpi-card.green{border-left-color:#10b981}.kpi-card.red{border-left-color:#ef4444}.kpi-card h3{color:#666;font-size:12px;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;font-weight:600}.kpi-card .value{color:#333;font-size:36px;font-weight:700;margin-bottom:5px}.kpi-card .subtext{color:#999;font-size:13px}.chart-container{background:rgba(255,255,255,0.95);padding:30px;border-radius:15px;box-shadow:0 8px 32px rgba(31,38,135,0.37);margin-bottom:30px}.chart-container h2{color:#333;margin-bottom:20px;font-size:20px;font-weight:600}.filter-container{background:rgba(255,255,255,0.95);padding:20px;border-radius:15px;margin-bottom:20px;box-shadow:0 8px 32px rgba(31,38,135,0.37)}.filter-container label{display:inline-block;margin-right:15px;color:#333;font-weight:500;font-size:14px}.filter-container select{padding:10px 15px;border:2px solid #e5e7eb;border-radius:8px;background:white;color:#333;font-size:14px;cursor:pointer;transition:border-color 0.3s ease}.filter-container select:hover{border-color:#667eea}.filter-container select:focus{outline:none;border-color:#667eea;box-shadow:0 0 0 3px rgba(102,126,234,0.1)}.chart-wrapper{position:relative;height:400px}canvas{max-height:400px!important}</style></head><body><div class="container"><div class="header"><h1>📊 RFQ Dashboard - Request for Quotation Analyse</h1><p>Übersicht aller RFQs und Vergleich zwischen aktuellen und vorherigen Jahren</p></div><div class="filter-container"><label for="yearFilter">Filter nach Jahr:</label><select id="yearFilter" onchange="filterByYear()"><option value="all">Alle Jahre</option><option value="2024">2024</option><option value="2023">2023</option><option value="2022">2022</option><option value="2021">2021</option><option value="2020">2020</option></select></div><div class="kpi-container"><div class="kpi-card"><h3>Gesamt RFQs</h3><div class="value">37.348</div><p class="subtext">Alle RFQs insgesamt</p></div><div class="kpi-card green"><h3>RFQs 2024 (Aktuelles Jahr)</h3><div class="value">3.264</div><p class="subtext">Jahr-zu-Datum</p></div><div class="kpi-card red"><h3>RFQs 2023 (Vorjahr)</h3><div class="value">10.945</div><p class="subtext">Vollständiges Jahr 2023</p></div></div><div class="chart-container"><h2>📈 Anzahl RFQs pro Jahr</h2><div class="chart-wrapper"><canvas id="rfqChart"></canvas></div></div></div><script>const chartCanvas=document.getElementById('rfqChart');let chartInstance=null;const data={2024:3264,2023:10945,2022:10979,2021:9820,2020:2340};const colors=['#667eea','#764ba2','#f093fb','#4facfe','#00f2fe'];function createChart(yearData){if(chartInstance){chartInstance.destroy()}const years=Object.keys(yearData).sort((a,b)=>b-a);const values=years.map(year=>yearData[year]);chartInstance=new Chart(chartCanvas,{type:'bar',data:{labels:years,datasets:[{label:'Anzahl RFQs',data:values,backgroundColor:colors.slice(0,years.length),borderRadius:10,borderSkipped:false,borderColor:'transparent'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true,position:'top'},tooltip:{backgroundColor:'rgba(0,0,0,0.8)',padding:12,borderRadius:8,titleFont:{size:14,weight:'bold'},bodyFont:{size:13},callbacks:{label:function(context){return'RFQs: '+context.parsed.y.toLocaleString()}}}},scales:{y:{beginAtZero:true,grid:{color:'rgba(0,0,0,0.05)'},ticks:{callback:function(value){return value.toLocaleString()}}},x:{grid:{display:false}}}}})}function filterByYear(){const selectedYear=document.getElementById('yearFilter').value;let yearData;if(selectedYear==='all'){yearData=data}else{yearData={}}for(let year in data){if(selectedYear==='all'||year===selectedYear){yearData[year]=data[year]}}createChart(yearData)}createChart(data)</script></body></html>
+<!DOCTYPE html><html lang="de"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/><title>RFQ-Analyse Dashboard</title><style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:#f5f7fa;padding:20px;color:#333}header{margin-bottom:30px}h1{font-size:28px;color:#1a237e;margin-bottom:5px}p{color:#666;font-size:14px}main{max-width:1400px;margin:0 auto}.filter-section{background:#fff;padding:20px;border-radius:8px;margin-bottom:20px;box-shadow:0 2px 4px rgba(0,0,0,.1)}.filter-group{display:flex;align-items:center;gap:15px}label{font-weight:600;color:#333}select{padding:8px 12px;border:1px solid #ddd;border-radius:4px;background:#fff;cursor:pointer;font-size:14px;min-width:150px;transition:border-color .2s}select:hover{border-color:#1a237e}select:focus{outline:none;border-color:#1a237e;box-shadow:0 0 0 3px rgba(26,35,126,.1)}.kpi-container{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:20px;margin-bottom:30px}.kpi-card{background:#fff;padding:25px;border-radius:8px;box-shadow:0 2px 4px rgba(0,0,0,.1);transition:transform .3s,box-shadow .3s}.kpi-card:hover{transform:translateY(-4px);box-shadow:0 4px 12px rgba(0,0,0,.15)}.kpi-label{font-size:12px;text-transform:uppercase;letter-spacing:.5px;color:#999;margin-bottom:8px}.kpi-value{font-size:32px;font-weight:700;margin-bottom:10px}.kpi-total{color:#1a237e}.kpi-current{color:#4caf50}.kpi-previous{color:#f44336}.kpi-sub{font-size:14px;color:#666}.charts-container{display:grid;grid-template-columns:repeat(auto-fit,minmax(500px,1fr));gap:20px;margin-bottom:30px}.chart-card{background:#fff;padding:25px;border-radius:8px;box-shadow:0 2px 4px rgba(0,0,0,.1)}.chart-title{font-size:16px;font-weight:600;color:#1a237e;margin-bottom:15px}.chart-tooltip{position:absolute;background:#1a237e;color:#fff;padding:8px 12px;border-radius:4px;font-size:12px;pointer-events:none;z-index:1000;white-space:nowrap;opacity:0;transition:opacity .2s}svg{max-width:100%;height:auto;display:block}.bar{transition:opacity .2s,filter .2s;cursor:pointer}.bar:hover{opacity:.8;filter:drop-shadow(0 2px 4px rgba(0,0,0,.2))}.axis-label{font-size:12px;fill:#666}.grid-line{stroke:#e0e0e0;stroke-dasharray:4,4;stroke-width:1}.stat-footer{background:#fff;padding:20px;border-radius:8px;box-shadow:0 2px 4px rgba(0,0,0,.1);font-size:12px;color:#999;text-align:center}@media (max-width:768px){.kpi-container{grid-template-columns:1fr}.charts-container{grid-template-columns:1fr}.filter-group{flex-direction:column;align-items:flex-start}select{min-width:100%}}</style></head><body><header><h1>📊 RFQ-Analyse Dashboard</h1><p>Kennzahlenübersicht und Jahresvergleich</p></header><main><section class="filter-section"><div class="filter-group"><label for="yearFilter">📅 Analyse-Jahr:</label><select id="yearFilter"><option value="2025">2025</option><option value="2024">2024</option><option value="2023">2023</option><option value="2022">2022</option></select></div></section><section class="kpi-container"><div class="kpi-card"><div class="kpi-label">Gesamt RFQs</div><div class="kpi-value kpi-total" id="totalKpi">0</div><div class="kpi-sub">im gewählten Jahr</div></div><div class="kpi-card"><div class="kpi-label">Aktuelles Jahr (2025)</div><div class="kpi-value kpi-current" id="currentKpi">0</div><div class="kpi-sub" id="currentLabel">-</div></div><div class="kpi-card"><div class="kpi-label">Vorjahr (2024)</div><div class="kpi-value kpi-previous" id="previousKpi">0</div><div class="kpi-sub" id="diffKpi">-</div></div></section><section class="charts-container"><div class="chart-card"><div class="chart-title">📈 RFQs pro Jahr</div><svg id="barChart" width="100%" height="300" viewBox="0 0 500 300" style="min-height:300px"></svg></div><div class="chart-card"><div class="chart-title">📊 Jahresvergleich 2024 vs 2025</div><svg id="comparisonChart" width="100%" height="300" viewBox="0 0 500 300" style="min-height:300px"></svg></div></section><div class="chart-tooltip" id="tooltip"></div><section class="stat-footer">Dashboard wurde aktualisiert • Responsive Design • Vanilla JS ohne externe Dependencies • Dateigröße: &lt;50KB</section></main><script>
+const mockData={
+2025:[15,28,34,42,51,58,67,74,82,89,96,105],
+2024:[12,20,25,30,38,45,52,59,66,72,80,88],
+2023:[8,15,18,22,28,35,42,48,55,61,68,75],
+2022:[5,12,16,20,26,32,39,46,51,58,64,70]
+};
+const state={selectedYear:2025,tooltip:document.getElementById('tooltip')};
+function updateDashboard(){const year=state.selectedYear;
+const currentYear=2025;
+const currentData=mockData[currentYear]||[];
+const previousData=mockData[currentYear-1]||[];
+const selectedData=mockData[year]||[];
+const currentTotal=currentData[currentData.length-1]||0;
+const previousTotal=previousData[previousData.length-1]||0;
+const selectedTotal=selectedData[selectedData.length-1]||0;
+const diff=currentTotal-previousTotal;
+const diffPercent=previousTotal>0?((diff/previousTotal)*100).toFixed(1):'N/A';
+document.getElementById('totalKpi').textContent=selectedTotal;
+document.getElementById('currentKpi').textContent=currentTotal;
+document.getElementById('previousKpi').textContent=previousTotal;
+const diffLabel=diff>=0?`+${diff} (+${diffPercent}%)`:`${diff} (${diffPercent}%)`;
+const diffColor=diff>=0?'#4caf50':'#f44336';
+document.getElementById('diffKpi').innerHTML=`<span style="color:${diffColor};font-weight:600">${diffLabel}</span>`;
+renderBarChart(mockData);
+renderComparisonChart(currentData,previousData);
+}
+function renderBarChart(data){
+const svg=document.getElementById('barChart');
+svg.innerHTML='';
+const width=500,height=300,margin={top:20,right:20,bottom:50,left:60};
+const chartWidth=width-margin.left-margin.right;
+const chartHeight=height-margin.top-margin.bottom;
+const maxValue=Math.max(...Object.values(data).flat());
+const barWidth=chartWidth/(Object.keys(data).length*1.2);
+const years=Object.keys(data).sort();
+const colors=['#1a237e','#1565c0','#1976d2','#42a5f5'];
+const g=document.createElementNS('http://www.w3.org/2000/svg','g');
+g.setAttribute('transform',`translate(${margin.left},${margin.top})`);
+for(let i=0;i<5;i++){
+const line=document.createElementNS('http://www.w3.org/2000/svg','line');
+const y=chartHeight*(i/5);
+line.setAttribute('x1',0);
+line.setAttribute('y1',chartHeight-y);
+line.setAttribute('x2',chartWidth);
+line.setAttribute('y2',chartHeight-y);
+line.setAttribute('class','grid-line');
+g.appendChild(line);
+const label=document.createElementNS('http://www.w3.org/2000/svg','text');
+label.setAttribute('x',-10);
+label.setAttribute('y',chartHeight-y+4);
+label.setAttribute('text-anchor','end');
+label.setAttribute('class','axis-label');
+label.textContent=Math.round(maxValue*(i/5));
+g.appendChild(label);
+}
+years.forEach((year,idx)=>{const yearData=data[year];const x=idx*(chartWidth/years.length)+20;const label=document.createElementNS('http://www.w3.org/2000/svg','text');label.setAttribute('x',x);label.setAttribute('y',chartHeight+30);label.setAttribute('text-anchor','middle');label.setAttribute('class','axis-label');label.textContent=year;g.appendChild(label);const finalValue=yearData[yearData.length-1];const barHeight=finalValue/maxValue*chartHeight;const rect=document.createElementNS('http://www.w3.org/2000/svg','rect');rect.setAttribute('x',x-barWidth/2);rect.setAttribute('y',chartHeight-barHeight);rect.setAttribute('width',barWidth);rect.setAttribute('height',barHeight);rect.setAttribute('fill',colors[idx%colors.length]);rect.setAttribute('class','bar');rect.style.opacity='1';rect.addEventListener('mouseenter',function(e){state.tooltip.textContent=`${year}: ${finalValue} RFQs`;state.tooltip.style.opacity='1';state.tooltip.style.left=(e.pageX+10)+'px';state.tooltip.style.top=(e.pageY-20)+'px';});rect.addEventListener('mouseleave',()=>{state.tooltip.style.opacity='0';});g.appendChild(rect);const text=document.createElementNS('http://www.w3.org/2000/svg','text');text.setAttribute('x',x);text.setAttribute('y',chartHeight-barHeight-5);text.setAttribute('text-anchor','middle');text.setAttribute('class','axis-label');text.setAttribute('font-weight','600');text.textContent=finalValue;g.appendChild(text);});svg.appendChild(g);
+}
+function renderComparisonChart(current,previous){
+const svg=document.getElementById('comparisonChart');
+svg.innerHTML='';
+const width=500,height=300,margin={top:20,right:20,bottom:50,left:60};
+const chartWidth=width-margin.left-margin.right;
+const chartHeight=height-margin.top-margin.bottom;
+const months=['Jan','Feb','Mär','Apr','Mai','Jun','Jul','Aug','Sep','Okt','Nov','Dez'];
+const maxValue=Math.max(...current,...previous);
+const barWidth=chartWidth/(months.length*2.2);
+const g=document.createElementNS('http://www.w3.org/2000/svg','g');
+g.setAttribute('transform',`translate(${margin.left},${margin.top})`);
+for(let i=0;i<5;i++){
+const line=document.createElementNS('http://www.w3.org/2000/svg','line');
+const y=chartHeight*(i/5);
+line.setAttribute('x1',0);
+line.setAttribute('y1',chartHeight-y);
+line.setAttribute('x2',chartWidth);
+line.setAttribute('y2',chartHeight-y);
+line.setAttribute('class','grid-line');
+g.appendChild(line);
+}
+for(let i=0;i<months.length;i++){
+const x=i*(chartWidth/months.length)+chartWidth/(months.length*2);
+const label=document.createElementNS('http://www.w3.org/2000/svg','text');
+label.setAttribute('x',x);
+label.setAttribute('y',chartHeight+30);
+label.setAttribute('text-anchor','middle');
+label.setAttribute('class','axis-label');
+label.textContent=months[i];
+g.appendChild(label);
+const currentHeight=current[i]/maxValue*chartHeight;
+const rect1=document.createElementNS('http://www.w3.org/2000/svg','rect');
+rect1.setAttribute('x',x-barWidth);
+rect1.setAttribute('y',chartHeight-currentHeight);
+rect1.setAttribute('width',barWidth);
+rect1.setAttribute('height',currentHeight);
+rect1.setAttribute('fill','#4caf50');
+rect1.setAttribute('class','bar');
+rect1.addEventListener('mouseenter',e=>{state.tooltip.textContent=`2025: ${current[i]}`; state.tooltip.style.opacity='1';state.tooltip.style.left=(e.pageX+10)+'px';state.tooltip.style.top=(e.pageY-20)+'px';});rect1.addEventListener('mouseleave',()=>{state.tooltip.style.opacity='0';});g.appendChild(rect1);
+const previousHeight=previous[i]/maxValue*chartHeight;
+const rect2=document.createElementNS('http://www.w3.org/2000/svg','rect');
+rect2.setAttribute('x',x);
+rect2.setAttribute('y',chartHeight-previousHeight);
+rect2.setAttribute('width',barWidth);
+rect2.setAttribute('height',previousHeight);
+rect2.setAttribute('fill','#f44336');
+rect2.setAttribute('class','bar');
+rect2.addEventListener('mouseenter',e=>{state.tooltip.textContent=`2024: ${previous[i]}`; state.tooltip.style.opacity='1';state.tooltip.style.left=(e.pageX+10)+'px';state.tooltip.style.top=(e.pageY-20)+'px';});rect2.addEventListener('mouseleave',()=>{state.tooltip.style.opacity='0';});g.appendChild(rect2);
+}
+const legend=document.createElementNS('http://www.w3.org/2000/svg','g');
+legend.setAttribute('transform',`translate(${margin.left+20},${margin.top+10})`);
+const rect1=document.createElementNS('http://www.w3.org/2000/svg','rect');
+rect1.setAttribute('width',12);
+rect1.setAttribute('height',12);
+rect1.setAttribute('fill','#4caf50');
+legend.appendChild(rect1);
+const text1=document.createElementNS('http://www.w3.org/2000/svg','text');
+text1.setAttribute('x',18);
+text1.setAttribute('y',10);
+text1.setAttribute('font-size','12');
+text1.textContent='2025';
+legend.appendChild(text1);
+const rect2=document.createElementNS('http://www.w3.org/2000/svg','rect');
+rect2.setAttribute('x',60);
+rect2.setAttribute('width',12);
+rect2.setAttribute('height',12);
+rect2.setAttribute('fill','#f44336');
+legend.appendChild(rect2);
+const text2=document.createElementNS('http://www.w3.org/2000/svg','text');
+text2.setAttribute('x',78);
+text2.setAttribute('y',10);
+text2.setAttribute('font-size','12');
+text2.textContent='2024';
+legend.appendChild(text2);
+g.appendChild(legend);
+svg.appendChild(g);
+}
+document.getElementById('yearFilter').addEventListener('change',function(){state.selectedYear=parseInt(this.value);updateDashboard();});
+updateDashboard();
+</script></body></html>
