@@ -1,1 +1,440 @@
-<!DOCTYPE html><html lang="de"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>RFQ Dashboard</title><style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:linear-gradient(135deg,#1a1a2e 0%,#16213e 50%,#0f3460 100%);min-height:100vh;display:flex;justify-content:center;align-items:center;padding:20px}.dashboard{max-width:600px;width:100%}.header{text-align:center;margin-bottom:40px}.header h1{color:#fff;font-size:2.5rem;font-weight:300;margin-bottom:10px}.header p{color:#a0aec0;font-size:1rem}.kpi-card{background:linear-gradient(145deg,rgba(255,255,255,0.1) 0%,rgba(255,255,255,0.05) 100%);backdrop-filter:blur(10px);border-radius:24px;padding:50px;text-align:center;border:1px solid rgba(255,255,255,0.1);box-shadow:0 8px 32px rgba(0,0,0,0.3);position:relative;overflow:hidden}.kpi-card::before{content:'';position:absolute;top:-50%;left:-50%;width:200%;height:200%;background:radial-gradient(circle,rgba(0,212,255,0.1) 0%,transparent 70%);animation:pulse 4s ease-in-out infinite}.kpi-label{color:#a0aec0;font-size:1.1rem;text-transform:uppercase;letter-spacing:3px;margin-bottom:20px;position:relative}.kpi-value{font-size:5rem;font-weight:700;background:linear-gradient(135deg,#00d4ff 0%,#7c3aed 50%,#f472b6 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;position:relative;animation:countUp 1.5s ease-out}.kpi-unit{color:#64748b;font-size:1rem;margin-top:15px;position:relative}.icon{font-size:3rem;margin-bottom:20px;position:relative}@keyframes pulse{0%,100%{transform:rotate(0deg)}50%{transform:rotate(180deg)}}@keyframes countUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}.footer{text-align:center;margin-top:30px;color:#64748b;font-size:0.85rem}.footer span{color:#00d4ff}</style></head><body><div class="dashboard"><div class="header"><h1>📊 RFQ Dashboard</h1><p>Request for Quotation Übersicht</p></div><div class="kpi-card"><div class="icon">📋</div><div class="kpi-label">Gesamte RFQs</div><div class="kpi-value">37.348</div><div class="kpi-unit">Anfragen im System</div></div><div class="footer">Datenstand: <span>Aktuell</span> | Powered by Analytics</div></div></body></html>
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RFQ Dashboard nach Jahren</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #fff;
+        }
+        .dashboard-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .dashboard-header h1 {
+            font-size: 2.5rem;
+            background: linear-gradient(90deg, #00d9ff, #00ff88);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+        }
+        .dashboard-header p {
+            color: #8892b0;
+            font-size: 1.1rem;
+        }
+        .kpi-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        .kpi-card {
+            background: linear-gradient(145deg, #1e2a4a, #243b67);
+            border-radius: 15px;
+            padding: 25px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,255,255,0.1);
+            transition: transform 0.3s ease;
+        }
+        .kpi-card:hover {
+            transform: translateY(-5px);
+        }
+        .kpi-value {
+            font-size: 2.5rem;
+            font-weight: bold;
+            background: linear-gradient(90deg, #00d9ff, #00ff88);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .kpi-label {
+            color: #8892b0;
+            margin-top: 10px;
+            font-size: 0.95rem;
+        }
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+        .chart-card {
+            background: linear-gradient(145deg, #1e2a4a, #243b67);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .chart-card h3 {
+            color: #00d9ff;
+            margin-bottom: 20px;
+            font-size: 1.2rem;
+        }
+        .chart-container {
+            position: relative;
+            height: 350px;
+        }
+        .table-card {
+            background: linear-gradient(145deg, #1e2a4a, #243b67);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,255,255,0.1);
+            overflow-x: auto;
+        }
+        .table-card h3 {
+            color: #00d9ff;
+            margin-bottom: 20px;
+            font-size: 1.2rem;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        th {
+            background: rgba(0, 217, 255, 0.1);
+            color: #00d9ff;
+            font-weight: 600;
+        }
+        tr:hover {
+            background: rgba(255,255,255,0.05);
+        }
+        .status-badge {
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+        .status-done { background: rgba(0, 255, 136, 0.2); color: #00ff88; }
+        .status-checking { background: rgba(255, 193, 7, 0.2); color: #ffc107; }
+        .status-canceled { background: rgba(255, 82, 82, 0.2); color: #ff5252; }
+        .status-running { background: rgba(0, 217, 255, 0.2); color: #00d9ff; }
+        .status-planned { background: rgba(156, 39, 176, 0.2); color: #ce93d8; }
+        .status-approved { background: rgba(76, 175, 80, 0.2); color: #81c784; }
+        @media (max-width: 768px) {
+            .charts-grid { grid-template-columns: 1fr; }
+            .dashboard-header h1 { font-size: 1.8rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-header">
+        <h1>📊 RFQ Dashboard nach Jahren</h1>
+        <p>Request for Quotations Übersicht | Datenstand: 2020 - 2024</p>
+    </div>
+
+    <div class="kpi-container">
+        <div class="kpi-card">
+            <div class="kpi-value">37.348</div>
+            <div class="kpi-label">Gesamt RFQs</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-value">30.233</div>
+            <div class="kpi-label">Abgeschlossen (Done)</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-value">80,9%</div>
+            <div class="kpi-label">Abschlussquote</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-value">10.979</div>
+            <div class="kpi-label">Peak Jahr 2022</div>
+        </div>
+    </div>
+
+    <div class="charts-grid">
+        <div class="chart-card">
+            <h3>📈 RFQs pro Jahr</h3>
+            <div class="chart-container">
+                <canvas id="yearlyChart"></canvas>
+            </div>
+        </div>
+        <div class="chart-card">
+            <h3>🎯 Status Verteilung (Gesamt)</h3>
+            <div class="chart-container">
+                <canvas id="statusChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div class="charts-grid">
+        <div class="chart-card">
+            <h3>📊 Status nach Jahren (Stacked)</h3>
+            <div class="chart-container">
+                <canvas id="stackedChart"></canvas>
+            </div>
+        </div>
+        <div class="chart-card">
+            <h3>📉 Wachstumsrate Jahr-über-Jahr</h3>
+            <div class="chart-container">
+                <canvas id="growthChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div class="table-card">
+        <h3>📋 Detailierte Jahresübersicht nach Status</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Jahr</th>
+                    <th>Done</th>
+                    <th>Checking</th>
+                    <th>Canceled</th>
+                    <th>Running</th>
+                    <th>Planned</th>
+                    <th>Approved</th>
+                    <th>Gesamt</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>2020</strong></td>
+                    <td><span class="status-badge status-done">1.997</span></td>
+                    <td><span class="status-badge status-checking">59</span></td>
+                    <td><span class="status-badge status-canceled">224</span></td>
+                    <td><span class="status-badge status-running">0</span></td>
+                    <td><span class="status-badge status-planned">60</span></td>
+                    <td><span class="status-badge status-approved">0</span></td>
+                    <td><strong>2.340</strong></td>
+                </tr>
+                <tr>
+                    <td><strong>2021</strong></td>
+                    <td><span class="status-badge status-done">8.659</span></td>
+                    <td><span class="status-badge status-checking">319</span></td>
+                    <td><span class="status-badge status-canceled">747</span></td>
+                    <td><span class="status-badge status-running">0</span></td>
+                    <td><span class="status-badge status-planned">94</span></td>
+                    <td><span class="status-badge status-approved">1</span></td>
+                    <td><strong>9.820</strong></td>
+                </tr>
+                <tr>
+                    <td><strong>2022</strong></td>
+                    <td><span class="status-badge status-done">9.090</span></td>
+                    <td><span class="status-badge status-checking">726</span></td>
+                    <td><span class="status-badge status-canceled">980</span></td>
+                    <td><span class="status-badge status-running">4</span></td>
+                    <td><span class="status-badge status-planned">176</span></td>
+                    <td><span class="status-badge status-approved">3</span></td>
+                    <td><strong>10.979</strong></td>
+                </tr>
+                <tr>
+                    <td><strong>2023</strong></td>
+                    <td><span class="status-badge status-done">8.608</span></td>
+                    <td><span class="status-badge status-checking">1.298</span></td>
+                    <td><span class="status-badge status-canceled">829</span></td>
+                    <td><span class="status-badge status-running">23</span></td>
+                    <td><span class="status-badge status-planned">170</span></td>
+                    <td><span class="status-badge status-approved">17</span></td>
+                    <td><strong>10.945</strong></td>
+                </tr>
+                <tr>
+                    <td><strong>2024</strong></td>
+                    <td><span class="status-badge status-done">1.879</span></td>
+                    <td><span class="status-badge status-checking">695</span></td>
+                    <td><span class="status-badge status-canceled">207</span></td>
+                    <td><span class="status-badge status-running">416</span></td>
+                    <td><span class="status-badge status-planned">60</span></td>
+                    <td><span class="status-badge status-approved">7</span></td>
+                    <td><strong>3.264</strong></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        // Yearly RFQs Bar Chart
+        const yearlyCtx = document.getElementById('yearlyChart').getContext('2d');
+        new Chart(yearlyCtx, {
+            type: 'bar',
+            data: {
+                labels: ['2020', '2021', '2022', '2023', '2024'],
+                datasets: [{
+                    label: 'Anzahl RFQs',
+                    data: [2340, 9820, 10979, 10945, 3264],
+                    backgroundColor: [
+                        'rgba(0, 217, 255, 0.8)',
+                        'rgba(0, 255, 136, 0.8)',
+                        'rgba(255, 193, 7, 0.8)',
+                        'rgba(156, 39, 176, 0.8)',
+                        'rgba(255, 82, 82, 0.8)'
+                    ],
+                    borderColor: [
+                        'rgba(0, 217, 255, 1)',
+                        'rgba(0, 255, 136, 1)',
+                        'rgba(255, 193, 7, 1)',
+                        'rgba(156, 39, 176, 1)',
+                        'rgba(255, 82, 82, 1)'
+                    ],
+                    borderWidth: 2,
+                    borderRadius: 8
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: { color: 'rgba(255,255,255,0.1)' },
+                        ticks: { color: '#8892b0' }
+                    },
+                    x: {
+                        grid: { display: false },
+                        ticks: { color: '#8892b0' }
+                    }
+                }
+            }
+        });
+
+        // Status Doughnut Chart
+        const statusCtx = document.getElementById('statusChart').getContext('2d');
+        new Chart(statusCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Done', 'Checking', 'Canceled', 'Planned', 'Running', 'Approved'],
+                datasets: [{
+                    data: [30233, 3097, 2987, 560, 443, 28],
+                    backgroundColor: [
+                        'rgba(0, 255, 136, 0.8)',
+                        'rgba(255, 193, 7, 0.8)',
+                        'rgba(255, 82, 82, 0.8)',
+                        'rgba(156, 39, 176, 0.8)',
+                        'rgba(0, 217, 255, 0.8)',
+                        'rgba(76, 175, 80, 0.8)'
+                    ],
+                    borderColor: '#1e2a4a',
+                    borderWidth: 3
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'right',
+                        labels: { color: '#8892b0', padding: 15 }
+                    }
+                }
+            }
+        });
+
+        // Stacked Bar Chart
+        const stackedCtx = document.getElementById('stackedChart').getContext('2d');
+        new Chart(stackedCtx, {
+            type: 'bar',
+            data: {
+                labels: ['2020', '2021', '2022', '2023', '2024'],
+                datasets: [
+                    {
+                        label: 'Done',
+                        data: [1997, 8659, 9090, 8608, 1879],
+                        backgroundColor: 'rgba(0, 255, 136, 0.8)'
+                    },
+                    {
+                        label: 'Checking',
+                        data: [59, 319, 726, 1298, 695],
+                        backgroundColor: 'rgba(255, 193, 7, 0.8)'
+                    },
+                    {
+                        label: 'Canceled',
+                        data: [224, 747, 980, 829, 207],
+                        backgroundColor: 'rgba(255, 82, 82, 0.8)'
+                    },
+                    {
+                        label: 'Running',
+                        data: [0, 0, 4, 23, 416],
+                        backgroundColor: 'rgba(0, 217, 255, 0.8)'
+                    },
+                    {
+                        label: 'Planned',
+                        data: [60, 94, 176, 170, 60],
+                        backgroundColor: 'rgba(156, 39, 176, 0.8)'
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                        labels: { color: '#8892b0' }
+                    }
+                },
+                scales: {
+                    x: { stacked: true, grid: { display: false }, ticks: { color: '#8892b0' } },
+                    y: { stacked: true, grid: { color: 'rgba(255,255,255,0.1)' }, ticks: { color: '#8892b0' } }
+                }
+            }
+        });
+
+        // Growth Rate Line Chart
+        const growthCtx = document.getElementById('growthChart').getContext('2d');
+        new Chart(growthCtx, {
+            type: 'line',
+            data: {
+                labels: ['2020→2021', '2021→2022', '2022→2023', '2023→2024*'],
+                datasets: [{
+                    label: 'Wachstumsrate %',
+                    data: [319.7, 11.8, -0.3, -70.2],
+                    borderColor: 'rgba(0, 217, 255, 1)',
+                    backgroundColor: 'rgba(0, 217, 255, 0.2)',
+                    fill: true,
+                    tension: 0.4,
+                    pointBackgroundColor: 'rgba(0, 217, 255, 1)',
+                    pointBorderColor: '#fff',
+                    pointBorderWidth: 2,
+                    pointRadius: 6
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return context.parsed.y.toFixed(1) + '%';
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        grid: { color: 'rgba(255,255,255,0.1)' },
+                        ticks: { 
+                            color: '#8892b0',
+                            callback: function(value) { return value + '%'; }
+                        }
+                    },
+                    x: {
+                        grid: { display: false },
+                        ticks: { color: '#8892b0' }
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>
