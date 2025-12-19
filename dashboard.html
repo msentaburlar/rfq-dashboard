@@ -1,1 +1,188 @@
-<!DOCTYPE html><html><head><script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script><style>body { font-family: Arial, sans-serif; padding: 20px; background-color: #f5f5f5; } .container { background-color: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); max-width: 900px; margin: 0 auto; } h1 { color: #333; text-align: center; } .chart-container { position: relative; height: 400px; margin-top: 20px; }</style></head><body><div class="container"><h1>RFQ-Anzahl nach Jahren</h1><div class="chart-container"><canvas id="myChart"></canvas></div></div><script>const ctx = document.getElementById('myChart').getContext('2d'); const data = { labels: ['2020', '2021', '2022', '2023', '2024'], datasets: [{ label: 'Anzahl RFQs', data: [2340, 9820, 10979, 10945, 3264], backgroundColor: '#42C5F5', borderColor: '#20B2AA', borderWidth: 2 }] }; const config = { type: 'bar', data: data, options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, ticks: { callback: function(value) { return value.toLocaleString('de-DE'); } } } }, plugins: { legend: { display: true, position: 'top' }, title: { display: true, text: 'RFQ Anzahl pro Jahr' } } } }; const myChart = new Chart(ctx, config);</script></body></html>
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RFQs nach Jahren</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 20px;
+    }
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+      padding: 30px;
+    }
+    h1 {
+      text-align: center;
+      color: #333;
+      margin-bottom: 10px;
+      font-size: 28px;
+    }
+    .subtitle {
+      text-align: center;
+      color: #777;
+      margin-bottom: 30px;
+      font-size: 14px;
+    }
+    .chart-wrapper {
+      position: relative;
+      height: 400px;
+      margin-bottom: 30px;
+    }
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 15px;
+      margin-top: 30px;
+    }
+    .stat-box {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 15px;
+      border-radius: 8px;
+      text-align: center;
+    }
+    .stat-label {
+      font-size: 12px;
+      opacity: 0.9;
+      text-transform: uppercase;
+      margin-bottom: 5px;
+    }
+    .stat-value {
+      font-size: 24px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>📊 RFQ-Analyse nach Jahren</h1>
+    <p class="subtitle">Gesamtanzahl der Request for Quotations (RFQs) pro Jahr</p>
+    
+    <div class="chart-wrapper">
+      <canvas id="rfqChart"></canvas>
+    </div>
+    
+    <div class="stats">
+      <div class="stat-box">
+        <div class="stat-label">Gesamt RFQs</div>
+        <div class="stat-value">37,348</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-label">Durchschnitt/Jahr</div>
+        <div class="stat-value">7,470</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-label">Höchstes Jahr</div>
+        <div class="stat-value">2022</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-label">Top-Wert</div>
+        <div class="stat-value">10,979</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const ctx = document.getElementById('rfqChart').getContext('2d');
+    const chart = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: ['2020', '2021', '2022', '2023', '2024'],
+        datasets: [{
+          label: 'Anzahl RFQs',
+          data: [2340, 9820, 10979, 10945, 3264],
+          backgroundColor: [
+            'rgba(102, 126, 234, 0.7)',
+            'rgba(118, 75, 162, 0.7)',
+            'rgba(237, 100, 166, 0.7)',
+            'rgba(255, 154, 158, 0.7)',
+            'rgba(250, 179, 135, 0.7)'
+          ],
+          borderColor: [
+            'rgba(102, 126, 234, 1)',
+            'rgba(118, 75, 162, 1)',
+            'rgba(237, 100, 166, 1)',
+            'rgba(255, 154, 158, 1)',
+            'rgba(250, 179, 135, 1)'
+          ],
+          borderWidth: 2,
+          borderRadius: 8
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            display: true,
+            labels: {
+              font: { size: 14, weight: 'bold' },
+              padding: 15,
+              usePointStyle: true
+            }
+          },
+          tooltip: {
+            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+            padding: 12,
+            titleFont: { size: 14, weight: 'bold' },
+            bodyFont: { size: 13 },
+            borderColor: '#667eea',
+            borderWidth: 2,
+            callbacks: {
+              label: function(context) {
+                return 'RFQs: ' + context.parsed.y.toLocaleString('de-DE');
+              }
+            }
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            ticks: {
+              font: { size: 12 },
+              callback: function(value) {
+                return value.toLocaleString('de-DE');
+              }
+            },
+            grid: {
+              color: 'rgba(0, 0, 0, 0.05)',
+              drawBorder: false
+            },
+            title: {
+              display: true,
+              text: 'Anzahl RFQs'
+            }
+          },
+          x: {
+            ticks: {
+              font: { size: 12, weight: 'bold' }
+            },
+            grid: {
+              display: false,
+              drawBorder: false
+            },
+            title: {
+              display: true,
+              text: 'Jahr'
+            }
+          }
+        }
+      }
+    });
+  </script>
+</body>
+</html>
