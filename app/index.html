@@ -102,21 +102,21 @@
     }
 
     // Schritt 1: Fake-Backend (nur Demo)
-    async function fakeCall(message){
-      // Simuliert die spätere n8n-Antwortstruktur
-      const m = message.toLowerCase();
-      if (m.includes('dashboard')) {
-        return {
-          type: "dashboard",
-          title: "RFQ Dashboard",
-          url: "https://msentaburlar.github.io/rfq-dashboard/dashboard.html"
-        };
-      }
-      return {
-        type: "text",
-        answer: "Gesamtanzahl RFQs: 37.348 (Demo)."
-      };
-    }
+    async function callN8N(message){
+  const WEBHOOK_URL = "https://yraq0l4j.rpcld.cc/webhook/rfq-chat";
+
+  const r = await fetch(WEBHOOK_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ message })
+  });
+
+  if(!r.ok){
+    throw new Error("n8n HTTP " + r.status);
+  }
+  return await r.json();
+}
+
 
     async function onSend(){
       const msg = input.value.trim();
@@ -126,7 +126,7 @@
       sendBtn.disabled = true;
 
       try{
-        const res = await fakeCall(msg);
+        const res = await callN8N(msg);
 
         if(res.type === "text"){
           addMsg('bot', res.answer);
