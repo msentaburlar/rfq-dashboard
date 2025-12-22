@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RFQs nach Monaten</title>
+    <title>RFQs nach Jahren</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         * {
@@ -15,148 +15,130 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
             min-height: 100vh;
-            padding: 20px;
+            padding: 40px 20px;
         }
-        .container {
-            max-width: 1400px;
+        .dashboard-container {
+            max-width: 1000px;
             margin: 0 auto;
         }
         .header {
             text-align: center;
-            margin-bottom: 30px;
-            color: #fff;
+            margin-bottom: 40px;
         }
         .header h1 {
+            color: #ffffff;
             font-size: 2.5rem;
+            font-weight: 600;
             margin-bottom: 10px;
-            background: linear-gradient(90deg, #00d4ff, #7b2cbf);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
         }
         .header p {
-            color: #a0a0a0;
+            color: #a0aec0;
             font-size: 1.1rem;
         }
-        .stats-cards {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
-            margin-bottom: 30px;
-        }
-        .stat-card {
-            background: rgba(255,255,255,0.05);
-            border-radius: 15px;
-            padding: 25px;
-            text-align: center;
-            border: 1px solid rgba(255,255,255,0.1);
-            backdrop-filter: blur(10px);
-        }
-        .stat-card h3 {
-            color: #a0a0a0;
-            font-size: 0.9rem;
-            margin-bottom: 10px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-        .stat-card .value {
-            font-size: 2.2rem;
-            font-weight: bold;
-            background: linear-gradient(90deg, #00d4ff, #7b2cbf);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-        .chart-container {
-            background: rgba(255,255,255,0.05);
+        .chart-card {
+            background: rgba(255, 255, 255, 0.95);
             border-radius: 20px;
-            padding: 30px;
-            border: 1px solid rgba(255,255,255,0.1);
-            backdrop-filter: blur(10px);
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+        .chart-title {
+            color: #2d3748;
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 30px;
+            text-align: center;
         }
         .chart-wrapper {
             position: relative;
-            height: 500px;
+            height: 450px;
+        }
+        .stats-row {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-top: 30px;
+            flex-wrap: wrap;
+        }
+        .stat-item {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px 40px;
+            border-radius: 15px;
+            text-align: center;
+            color: white;
+        }
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+        }
+        .stat-label {
+            font-size: 0.9rem;
+            opacity: 0.9;
+            margin-top: 5px;
         }
     </style>
 </head>
 <body>
-    <div class="container">
+    <div class="dashboard-container">
         <div class="header">
-            <h1>📊 RFQs Dashboard</h1>
-            <p>Übersicht aller Request for Quotations nach Monaten (2020-2024)</p>
+            <h1>📊 RFQs nach Jahren</h1>
+            <p>Anzahl der Request for Quotations pro Jahr</p>
         </div>
-        
-        <div class="stats-cards">
-            <div class="stat-card">
-                <h3>Gesamt RFQs</h3>
-                <div class="value">37,617</div>
-            </div>
-            <div class="stat-card">
-                <h3>Durchschnitt/Monat</h3>
-                <div class="value">737</div>
-            </div>
-            <div class="stat-card">
-                <h3>Höchster Monat</h3>
-                <div class="value">1,166</div>
-            </div>
-            <div class="stat-card">
-                <h3>Zeitraum</h3>
-                <div class="value">51 Monate</div>
-            </div>
-        </div>
-        
-        <div class="chart-container">
+        <div class="chart-card">
+            <h2 class="chart-title">Jährliche RFQ-Entwicklung</h2>
             <div class="chart-wrapper">
                 <canvas id="rfqChart"></canvas>
             </div>
+            <div class="stats-row">
+                <div class="stat-item">
+                    <div class="stat-value">37.348</div>
+                    <div class="stat-label">Gesamt RFQs</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">10.979</div>
+                    <div class="stat-label">Maximum (2022)</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">5</div>
+                    <div class="stat-label">Jahre erfasst</div>
+                </div>
+            </div>
         </div>
     </div>
-    
-    <script>
-        const data = {
-            labels: ['2020-02','2020-03','2020-04','2020-05','2020-06','2020-07','2020-08','2020-09','2020-10','2020-11','2020-12','2021-01','2021-02','2021-03','2021-04','2021-05','2021-06','2021-07','2021-08','2021-09','2021-10','2021-11','2021-12','2022-01','2022-02','2022-03','2022-04','2022-05','2022-06','2022-07','2022-08','2022-09','2022-10','2022-11','2022-12','2023-01','2023-02','2023-03','2023-04','2023-05','2023-06','2023-07','2023-08','2023-09','2023-10','2023-11','2023-12','2024-01','2024-02','2024-03','2024-04'],
-            datasets: [{
-                label: 'Anzahl RFQs',
-                data: [17,34,16,37,199,306,224,284,358,430,435,599,758,909,878,817,824,977,639,896,911,871,741,743,1115,1166,798,947,991,1074,629,894,951,897,774,799,817,1020,816,1027,1030,1072,694,947,962,1014,747,958,1068,1050,188],
-                backgroundColor: function(context) {
-                    const chart = context.chart;
-                    const {ctx, chartArea} = chart;
-                    if (!chartArea) return null;
-                    const gradient = ctx.createLinearGradient(0, chartArea.bottom, 0, chartArea.top);
-                    gradient.addColorStop(0, 'rgba(0, 212, 255, 0.6)');
-                    gradient.addColorStop(1, 'rgba(123, 44, 191, 0.8)');
-                    return gradient;
-                },
-                borderColor: 'rgba(0, 212, 255, 1)',
-                borderWidth: 1,
-                borderRadius: 5,
-                hoverBackgroundColor: 'rgba(123, 44, 191, 1)',
-            }]
-        };
 
-        const config = {
+    <script>
+        const ctx = document.getElementById('rfqChart').getContext('2d');
+        
+        const gradient = ctx.createLinearGradient(0, 0, 0, 400);
+        gradient.addColorStop(0, 'rgba(102, 126, 234, 0.9)');
+        gradient.addColorStop(1, 'rgba(118, 75, 162, 0.9)');
+
+        new Chart(ctx, {
             type: 'bar',
-            data: data,
+            data: {
+                labels: ['2020', '2021', '2022', '2023', '2024'],
+                datasets: [{
+                    label: 'Anzahl RFQs',
+                    data: [2340, 9820, 10979, 10945, 3264],
+                    backgroundColor: gradient,
+                    borderColor: 'rgba(102, 126, 234, 1)',
+                    borderWidth: 2,
+                    borderRadius: 10,
+                    borderSkipped: false,
+                }]
+            },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
                 plugins: {
                     legend: {
-                        display: true,
-                        labels: {
-                            color: '#ffffff',
-                            font: {
-                                size: 14
-                            }
-                        }
+                        display: false
                     },
                     tooltip: {
-                        backgroundColor: 'rgba(0,0,0,0.8)',
-                        titleColor: '#00d4ff',
-                        bodyColor: '#ffffff',
-                        borderColor: '#00d4ff',
-                        borderWidth: 1,
+                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                        titleFont: { size: 14, weight: 'bold' },
+                        bodyFont: { size: 13 },
                         padding: 15,
-                        displayColors: false,
+                        cornerRadius: 10,
                         callbacks: {
                             label: function(context) {
                                 return 'RFQs: ' + context.parsed.y.toLocaleString('de-DE');
@@ -165,40 +147,50 @@
                     }
                 },
                 scales: {
-                    x: {
-                        grid: {
-                            color: 'rgba(255,255,255,0.1)'
-                        },
-                        ticks: {
-                            color: '#a0a0a0',
-                            maxRotation: 90,
-                            minRotation: 45,
-                            font: {
-                                size: 10
-                            }
-                        }
-                    },
                     y: {
                         beginAtZero: true,
                         grid: {
-                            color: 'rgba(255,255,255,0.1)'
+                            color: 'rgba(0, 0, 0, 0.05)',
+                            drawBorder: false
                         },
                         ticks: {
-                            color: '#a0a0a0',
+                            font: { size: 12, weight: '500' },
+                            color: '#4a5568',
                             callback: function(value) {
                                 return value.toLocaleString('de-DE');
                             }
+                        },
+                        title: {
+                            display: true,
+                            text: 'Anzahl RFQs',
+                            font: { size: 14, weight: '600' },
+                            color: '#2d3748',
+                            padding: { bottom: 10 }
+                        }
+                    },
+                    x: {
+                        grid: {
+                            display: false
+                        },
+                        ticks: {
+                            font: { size: 13, weight: '600' },
+                            color: '#2d3748'
+                        },
+                        title: {
+                            display: true,
+                            text: 'Jahr',
+                            font: { size: 14, weight: '600' },
+                            color: '#2d3748',
+                            padding: { top: 10 }
                         }
                     }
                 },
                 animation: {
-                    duration: 2000,
+                    duration: 1500,
                     easing: 'easeOutQuart'
                 }
             }
-        };
-
-        new Chart(document.getElementById('rfqChart'), config);
+        });
     </script>
 </body>
 </html>
