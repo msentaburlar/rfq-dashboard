@@ -4,6 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>RFQ Chat + Dashboard</title>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
   <style>
     :root { 
       font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
@@ -17,7 +18,6 @@
     }
     
     * { box-sizing: border-box; }
-    
     body { margin: 0; background: var(--bg); color: var(--text); }
     
     .app { 
@@ -55,12 +55,7 @@
       margin-top: 4px;
     }
     
-    /* Chat Log */
-    .chatlog { 
-      padding: 14px 16px; 
-      overflow: auto; 
-      flex: 1;
-    }
+    .chatlog { padding: 14px 16px; overflow: auto; flex: 1; }
     
     .msg { 
       margin: 10px 0; 
@@ -71,21 +66,11 @@
       font-size: 14px;
     }
     
-    .user { 
-      background: #e8f0ff; 
-      margin-left: auto;
-      border-bottom-right-radius: 4px;
-    }
-    
-    .bot { 
-      background: #f3f4f6;
-      border-bottom-left-radius: 4px;
-    }
-    
+    .user { background: #e8f0ff; margin-left: auto; border-bottom-right-radius: 4px; }
+    .bot { background: #f3f4f6; border-bottom-left-radius: 4px; }
     .bot.error { background: #fef2f2; color: #b91c1c; }
     .bot.success { background: #f0fdf4; color: #166534; }
     
-    /* Composer */
     .composer { 
       padding: 12px; 
       border-top: 1px solid var(--border); 
@@ -123,12 +108,7 @@
     button:hover:not(:disabled) { background: var(--primary-hover); }
     button:disabled { opacity: 0.6; cursor: not-allowed; }
     
-    /* Output Panel */
-    .out { 
-      padding: 14px 16px; 
-      overflow: auto; 
-      flex: 1;
-    }
+    .out { padding: 14px 16px; overflow: auto; flex: 1; }
     
     .card { 
       border: 1px solid var(--border); 
@@ -156,24 +136,23 @@
     
     .hint { color: var(--text-muted); font-size: 13px; }
     
-    /* Dashboard Container */
     .dashboard-container {
       width: 100%;
       min-height: 500px;
       border: 1px solid var(--border);
       border-radius: 12px;
       background: #fff;
-      overflow: auto;
+      overflow: hidden;
+      position: relative;
     }
     
     .dashboard-container iframe {
       width: 100%;
-      height: 70vh;
+      height: 75vh;
       border: none;
       border-radius: 12px;
     }
     
-    /* Loading Spinner */
     .loading {
       display: flex;
       align-items: center;
@@ -191,17 +170,50 @@
       animation: spin 0.8s linear infinite;
     }
     
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
+    @keyframes spin { to { transform: rotate(360deg); } }
     
-    /* Text Answer Formatting */
-    .answer-text {
-      line-height: 1.6;
-      white-space: pre-wrap;
-    }
+    .answer-content { line-height: 1.7; font-size: 14px; }
+    .answer-content h1, .answer-content h2, .answer-content h3 { margin: 16px 0 8px 0; color: var(--text); font-weight: 600; }
+    .answer-content h2 { color: var(--primary); }
+    .answer-content table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 13px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); border-radius: 8px; overflow: hidden; }
+    .answer-content thead { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
+    .answer-content th { padding: 12px 14px; text-align: left; font-weight: 600; }
+    .answer-content td { padding: 10px 14px; border-bottom: 1px solid #eee; }
+    .answer-content tbody tr:hover { background: #f8fafc; }
+    .answer-content ul, .answer-content ol { margin: 12px 0; padding-left: 24px; }
+    .answer-content li { margin: 6px 0; }
+    .answer-content strong { color: var(--primary); }
     
-    .answer-text strong { color: var(--primary); }
+    /* Refresh Button für Dashboard */
+    .refresh-btn {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      cursor: pointer;
+      z-index: 10;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .refresh-btn:hover { background: var(--primary-hover); }
+    
+    /* GitHub Pages Hinweis */
+    .github-note {
+      font-size: 11px;
+      color: var(--text-muted);
+      text-align: center;
+      margin-top: 8px;
+    }
+    .github-note a {
+      color: var(--primary);
+      text-decoration: none;
+    }
   </style>
 </head>
 <body>
@@ -240,15 +252,20 @@
 
   <script>
     // ============================================================
-    // KONFIGURATION - Hier deine n8n Webhook URL eintragen
+    // KONFIGURATION
     // ============================================================
     const CONFIG = {
-      // Ersetze mit deiner n8n Webhook URL
       WEBHOOK_URL: "https://yraq0l4j.rpcld.cc/webhook/rfq-chat",
-      
-      // Timeout in Millisekunden (Dashboard-Generierung kann dauern)
-      TIMEOUT: 120000  // 2 Minuten
+      DASHBOARD_BASE_URL: "https://msentaburlar.github.io/rfq-dashboard/dashboard.html",
+      TIMEOUT: 120000,
+      // Verzögerung bevor iframe geladen wird (GitHub Pages braucht Zeit)
+      GITHUB_PAGES_DELAY: 3000
     };
+
+    // ============================================================
+    // Marked.js konfigurieren
+    // ============================================================
+    marked.setOptions({ breaks: true, gfm: true, headerIds: false, mangle: false });
 
     // ============================================================
     // DOM Elements
@@ -257,6 +274,9 @@
     const output = document.getElementById('output');
     const input = document.getElementById('input');
     const sendBtn = document.getElementById('send');
+
+    // Speichere die aktuelle Dashboard-URL
+    let currentDashboardUrl = null;
 
     // ============================================================
     // Chat Functions
@@ -284,24 +304,17 @@
     // Output Display Functions
     // ============================================================
     
-    // Zeigt eine Text-Antwort an
     function showTextAnswer(text) {
-      // Formatiere den Text (Zeilenumbrüche, etc.)
-      const formatted = escapeHtml(text)
-        .replace(/\n/g, '<br>')
-        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-      
+      const htmlContent = marked.parse(text);
       output.innerHTML = `
         <div class="card">
           <div class="tag">Antwort</div>
-          <div class="answer-text">${formatted}</div>
+          <div class="answer-content">${htmlContent}</div>
         </div>
       `;
     }
 
-    // Zeigt ein Dashboard als inline HTML an
     function showDashboardInline(htmlContent, title = 'Dashboard') {
-      // Erstelle einen iframe mit dem HTML als srcdoc
       output.innerHTML = `
         <div class="card">
           <div class="tag dashboard">📊 ${escapeHtml(title)}</div>
@@ -312,24 +325,64 @@
       `;
     }
 
-    // Zeigt ein Dashboard via URL (falls n8n eine URL zurückgibt)
     function showDashboardUrl(url, title = 'Dashboard') {
+      // Cache-Busting: Füge Timestamp hinzu
+      const cacheBustedUrl = url + (url.includes('?') ? '&' : '?') + 't=' + Date.now();
+      currentDashboardUrl = cacheBustedUrl;
+      
       output.innerHTML = `
         <div class="card">
           <div class="tag dashboard">📊 ${escapeHtml(title)}</div>
           <div class="dashboard-container">
-            <iframe src="${escapeHtml(url)}"></iframe>
+            <button class="refresh-btn" onclick="refreshDashboard()">🔄 Aktualisieren</button>
+            <iframe id="dashboard-iframe" src="${cacheBustedUrl}"></iframe>
+          </div>
+          <div class="github-note">
+            Dashboard URL: <a href="${url}" target="_blank">${url}</a>
           </div>
         </div>
       `;
     }
 
-    // Zeigt einen Fehler an
+    function showDashboardUrlWithDelay(url, title = 'Dashboard') {
+      // Zeige erst Ladehinweis, dann nach Verzögerung das Dashboard
+      output.innerHTML = `
+        <div class="card">
+          <div class="tag dashboard">📊 ${escapeHtml(title)}</div>
+          <div class="dashboard-container" style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 300px;">
+            <div class="loading">
+              <div class="spinner"></div>
+              <span>Dashboard wird auf GitHub Pages bereitgestellt...</span>
+            </div>
+            <p style="color: var(--text-muted); font-size: 12px; margin-top: 12px;">
+              Bitte warten, GitHub Pages wird aktualisiert...
+            </p>
+          </div>
+        </div>
+      `;
+      
+      // Nach Verzögerung das Dashboard laden
+      setTimeout(() => {
+        showDashboardUrl(url, title);
+      }, CONFIG.GITHUB_PAGES_DELAY);
+    }
+
+    // Dashboard refresh Funktion (global)
+    window.refreshDashboard = function() {
+      const iframe = document.getElementById('dashboard-iframe');
+      if (iframe && currentDashboardUrl) {
+        // Neue URL mit neuem Timestamp
+        const newUrl = CONFIG.DASHBOARD_BASE_URL + '?t=' + Date.now();
+        iframe.src = newUrl;
+        currentDashboardUrl = newUrl;
+      }
+    };
+
     function showError(message) {
       output.innerHTML = `
         <div class="card">
           <div class="tag error">Fehler</div>
-          <div class="answer-text">${escapeHtml(message)}</div>
+          <div class="answer-content">${escapeHtml(message)}</div>
         </div>
       `;
     }
@@ -357,9 +410,7 @@
       try {
         const response = await fetch(CONFIG.WEBHOOK_URL, {
           method: "POST",
-          headers: { 
-            "Content-Type": "application/json"
-          },
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ 
             message: message,
             timestamp: new Date().toISOString()
@@ -368,15 +419,12 @@
         });
 
         clearTimeout(timeoutId);
-
-        // Lese immer zuerst als Text (für besseres Error Handling)
         const rawText = await response.text();
 
         if (!response.ok) {
           throw new Error(`HTTP ${response.status}: ${rawText || 'Keine Details'}`);
         }
 
-        // Versuche JSON zu parsen
         if (!rawText || rawText.trim() === '') {
           return { type: "text", answer: "Leere Antwort vom Server erhalten." };
         }
@@ -384,13 +432,11 @@
         try {
           return JSON.parse(rawText);
         } catch (parseError) {
-          // Falls kein JSON, behandle es als plain text
           return { type: "text", answer: rawText };
         }
 
       } catch (error) {
         clearTimeout(timeoutId);
-        
         if (error.name === 'AbortError') {
           throw new Error('Timeout: Die Anfrage hat zu lange gedauert.');
         }
@@ -405,43 +451,37 @@
       const msg = input.value.trim();
       if (!msg) return;
 
-      // Clear input & disable button
       input.value = '';
       sendBtn.disabled = true;
-
-      // Add user message to chat
       addMsg('user', escapeHtml(msg));
-      
-      // Show loading state
       showLoading();
 
       try {
         const response = await callN8N(msg);
 
-        // Handle different response types
         switch (response.type) {
           case 'text':
-            addMsg('bot', escapeHtml(response.answer || 'Keine Antwort'));
+            addMsg('bot', 'Antwort erhalten ✓');
             showTextAnswer(response.answer || 'Keine Antwort erhalten.');
             break;
 
           case 'dashboard':
-            // Dashboard kann entweder HTML-Content oder eine URL enthalten
             if (response.html) {
+              // Inline HTML - sofort anzeigen
               addMsg('bot', `✅ Dashboard "${response.title || 'Dashboard'}" wurde erstellt`, 'success');
               showDashboardInline(response.html, response.title);
             } else if (response.url) {
+              // URL zu GitHub Pages - mit Verzögerung laden
               addMsg('bot', `✅ Dashboard "${response.title || 'Dashboard'}" ist bereit`, 'success');
-              showDashboardUrl(response.url, response.title);
+              showDashboardUrlWithDelay(response.url, response.title);
             } else {
               throw new Error('Dashboard-Antwort enthält weder HTML noch URL');
             }
             break;
 
           default:
-            // Fallback: Behandle als Text
             const fallbackText = response.answer || response.text || response.output || JSON.stringify(response);
-            addMsg('bot', escapeHtml(fallbackText));
+            addMsg('bot', 'Antwort erhalten');
             showTextAnswer(fallbackText);
         }
 
@@ -467,7 +507,6 @@
       }
     });
 
-    // Focus input on load
     input.focus();
   </script>
 </body>
