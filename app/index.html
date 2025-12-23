@@ -21,15 +21,17 @@
     .app{display:grid;grid-template-columns:420px 1fr;height:100vh;gap:16px;padding:16px;}
     @media (max-width:900px){.app{grid-template-columns:1fr;grid-template-rows:1fr 1fr;}}
     .panel{background:var(--card-bg);border-radius:14px;box-shadow:0 6px 18px rgba(0,0,0,.06);overflow:hidden;display:flex;flex-direction:column;}
-    .header{padding:14px 16px;border-bottom:1px solid var(--border);font-weight:800;}
+    .header{padding:14px 16px;border-bottom:1px solid var(--border);font-weight:800;background:var(--card-bg);}
     .sub{font-weight:500;color:var(--text-muted);font-size:12px;margin-top:4px;}
+
     .chatlog{padding:14px 16px;overflow:auto;flex:1;}
     .msg{margin:10px 0;padding:10px 14px;border-radius:12px;max-width:90%;line-height:1.45;font-size:14px;}
     .user{background:#e8f0ff;margin-left:auto;}
     .bot{background:#f3f4f6;}
     .bot.success{background:#f0fdf4;color:#166534;}
     .bot.error{background:#fef2f2;color:#b91c1c;}
-    .composer{padding:12px;border-top:1px solid var(--border);display:flex;gap:10px;}
+
+    .composer{padding:12px;border-top:1px solid var(--border);display:flex;gap:10px;background:var(--card-bg);}
     textarea{flex:1;resize:none;border:1px solid #d6dde8;border-radius:10px;padding:12px;height:48px;outline:none;font-family:inherit;}
     button{border:0;background:var(--primary);color:white;padding:0 16px;border-radius:10px;font-weight:800;cursor:pointer;height:48px;}
     button:hover:not(:disabled){background:var(--primary-hover);}
@@ -41,28 +43,33 @@
     .tag.dashboard{background:#f0fdf4;color:#166534;}
     .tag.error{background:#fef2f2;color:#b91c1c;}
     .answer-content{line-height:1.7;font-size:14px;}
+
     .loading{display:flex;align-items:center;gap:8px;color:var(--text-muted);font-size:13px;}
     .spinner{width:16px;height:16px;border:2px solid var(--border);border-top-color:var(--primary);border-radius:50%;animation:spin .8s linear infinite;}
     @keyframes spin{to{transform:rotate(360deg);}}
 
-    /* Filterbar */
-    .filterbar{
-      display:flex;gap:10px;align-items:flex-end;
-      padding:12px 16px;border-bottom:1px solid var(--border);
+    /* Filterbar (RECHTS im Dashboard) */
+    .dash-filterbar{
+      display:flex;
+      gap:14px;
+      align-items:flex-end;
+      padding:12px 16px;
+      border-bottom:1px solid var(--border);
       background:var(--card-bg);
       flex-wrap:wrap;
     }
     .field{display:flex;flex-direction:column;gap:6px;}
-    .label{font-size:12px;color:var(--text-muted);font-weight:700;}
+    .label{font-size:12px;color:var(--text-muted);font-weight:800;}
     select{
       height:40px;border:1px solid #d6dde8;border-radius:10px;padding:0 10px;background:#fff;
-      font-weight:600;
+      font-weight:700;
     }
-    .btnrow{display:flex;gap:10px;align-items:center;}
+    .btnrow{display:flex;gap:10px;align-items:center;margin-left:auto;}
     .btn-run{background:var(--primary);height:40px;}
     .btn-run:hover{background:var(--primary-hover);}
     .btn-reset{background:var(--danger);height:40px;}
     .btn-reset:hover{background:var(--danger-hover);}
+    .btn-run,.btn-reset{padding:0 16px;border-radius:10px;font-weight:900;}
   </style>
 </head>
 
@@ -76,8 +83,25 @@
       <div class="sub">Frage stellen – Dashboard rechts aktualisieren</div>
     </div>
 
-    <!-- FILTERS -->
-    <div class="filterbar">
+    <div id="chatlog" class="chatlog">
+      <div class="msg bot">Schreibe eine Frage. Die Filter sind rechts im Dashboard.</div>
+    </div>
+
+    <div class="composer">
+      <textarea id="input" placeholder="Schreibe deine Frage..."></textarea>
+      <button id="send">Senden</button>
+    </div>
+  </div>
+
+  <!-- RIGHT: OUTPUT + FILTERS -->
+  <div class="panel">
+    <div class="header">
+      Ergebnis
+      <div class="sub">Analyse & Dashboard</div>
+    </div>
+
+    <!-- ✅ FILTERS SIND JETZT HIER (im Dashboard rechts) -->
+    <div class="dash-filterbar">
       <div class="field">
         <div class="label">Jahr</div>
         <select id="yearSel">
@@ -93,7 +117,7 @@
       <div class="field">
         <div class="label">Monat</div>
         <select id="monthSel" disabled>
-          <option value="">–</option>
+          <option value="">Alle Monate</option>
           <option value="1">Jan</option><option value="2">Feb</option><option value="3">Mär</option>
           <option value="4">Apr</option><option value="5">Mai</option><option value="6">Jun</option>
           <option value="7">Jul</option><option value="8">Aug</option><option value="9">Sep</option>
@@ -103,26 +127,10 @@
 
       <div class="btnrow">
         <button id="runBtn" class="btn-run" title="Aktualisiert nur bei Klick">Ausführen</button>
-        <button id="resetBtn" class="btn-reset" title="Filter leeren und neu berechnen">Zurücksetzen</button>
+        <button id="resetBtn" class="btn-reset" title="Filter leeren und sofort neu laden">Zurücksetzen</button>
       </div>
     </div>
 
-    <div id="chatlog" class="chatlog">
-      <div class="msg bot">Schreibe eine Frage und nutze optional die Filter oben.</div>
-    </div>
-
-    <div class="composer">
-      <textarea id="input" placeholder="Schreibe deine Frage..."></textarea>
-      <button id="send">Senden</button>
-    </div>
-  </div>
-
-  <!-- RIGHT: OUTPUT -->
-  <div class="panel">
-    <div class="header">
-      Ergebnis
-      <div class="sub">Analyse & Dashboard</div>
-    </div>
     <div id="output" class="out">
       <div class="card">Noch keine Antwort.</div>
     </div>
@@ -219,8 +227,8 @@
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin-top:12px;">
         ${kpis.map(k => `
           <div style="border:1px solid var(--border);border-radius:12px;padding:12px;background:#fff;">
-            <div style="font-size:12px;color:var(--text-muted);font-weight:700;">${escapeHtml(k.label || "")}</div>
-            <div style="font-size:22px;font-weight:900;margin-top:6px;">${escapeHtml(k.value || "")}</div>
+            <div style="font-size:12px;color:var(--text-muted);font-weight:800;">${escapeHtml(k.label || "")}</div>
+            <div style="font-size:22px;font-weight:950;margin-top:6px;">${escapeHtml(k.value || "")}</div>
           </div>
         `).join("")}
       </div>
@@ -240,7 +248,7 @@
       const id = c.id || ("chart" + (idx+1));
       return `
         <div style="margin-top:14px;border:1px solid var(--border);border-radius:12px;padding:12px;background:#fff;">
-          <div style="font-weight:900;margin-bottom:10px;">${escapeHtml(c.title || ("Chart " + (idx+1)))}</div>
+          <div style="font-weight:950;margin-bottom:10px;">${escapeHtml(c.title || ("Chart " + (idx+1)))}</div>
           <div style="height:280px;"><canvas id="${escapeHtml(id)}"></canvas></div>
         </div>
       `;
@@ -275,15 +283,15 @@
 
     el.innerHTML = `
       <div style="margin-top:14px;border:1px solid var(--border);border-radius:12px;overflow:hidden;background:#fff;">
-        <div style="padding:10px 12px;font-weight:900;border-bottom:1px solid var(--border);">Tabelle</div>
+        <div style="padding:10px 12px;font-weight:950;border-bottom:1px solid var(--border);">Tabelle</div>
         <div class="answer-content" style="padding:0;">
-          <table>
-            <thead>
-              <tr>${table.columns.map(col => `<th>${escapeHtml(col)}</th>`).join("")}</tr>
+          <table style="width:100%;border-collapse:collapse;">
+            <thead style="background:#f3f4f6;">
+              <tr>${table.columns.map(col => `<th style="text-align:left;padding:10px 12px;border-bottom:1px solid var(--border);">${escapeHtml(col)}</th>`).join("")}</tr>
             </thead>
             <tbody>
               ${table.rows.map(r => `
-                <tr>${r.map(cell => `<td>${escapeHtml(String(cell))}</td>`).join("")}</tr>
+                <tr>${r.map(cell => `<td style="padding:10px 12px;border-bottom:1px solid var(--border);">${escapeHtml(String(cell))}</td>`).join("")}</tr>
               `).join("")}
             </tbody>
           </table>
@@ -293,7 +301,7 @@
   }
 
   // ============================================================
-  // Filter-Logik: Monat deaktiviert bis Jahr gewählt
+  // Monat deaktiviert bis Jahr gewählt
   // ============================================================
   function syncMonthEnabled() {
     const y = yearSel.value;
@@ -304,7 +312,7 @@
   syncMonthEnabled();
 
   // ============================================================
-  // Robust JSON Parsing (falls nötig)
+  // Robust JSON Parsing
   // ============================================================
   function parseN8nResponse(rawText) {
     if (!rawText || rawText.trim() === '') {
@@ -347,7 +355,7 @@
   }
 
   // ============================================================
-  // Ausführen: sendet aktuelle Frage + Filter (nur bei Klick)
+  // Ausführen / Zurücksetzen (rechts im Dashboard)
   // ============================================================
   async function runQuery(message, { auto = false } = {}) {
     const filters = {
@@ -355,7 +363,6 @@
       month: monthSel.value ? Number(monthSel.value) : null
     };
 
-    // Falls Nutzer nichts tippt: Standardfrage (damit "Ausführen" trotzdem was macht)
     const msg = (message || "").trim() || "Erstelle ein Dashboard basierend auf den ausgewählten Filtern.";
 
     if (!auto) addMsg('user', escapeHtml(msg));
@@ -389,9 +396,6 @@
     }
   }
 
-  // ============================================================
-  // Button Events
-  // ============================================================
   runBtn.addEventListener("click", () => {
     runQuery(input.value);
     input.value = "";
@@ -401,10 +405,12 @@
     yearSel.value = "";
     monthSel.value = "";
     syncMonthEnabled();
-    runQuery("", { auto: true }); // sofort neu berechnen
+    runQuery("", { auto: true }); // sofort neu laden
   });
 
-  // Senden = normale Chat-Anfrage (ohne Auto-Update, aber Filter gehen mit)
+  // ============================================================
+  // Senden (Chat)
+  // ============================================================
   async function onSend() {
     const msg = input.value.trim();
     if (!msg) return;
