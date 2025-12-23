@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Top 5 Lieferanten - Dashboard</title>
+    <title>Lieferanten Dashboard</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         * {
@@ -13,253 +13,323 @@
         }
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
             min-height: 100vh;
             padding: 20px;
-        }
-        .dashboard-container {
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-        .header {
-            text-align: center;
-            margin-bottom: 30px;
-            padding: 30px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 20px;
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-        .header h1 {
             color: #fff;
-            font-size: 2.5rem;
-            margin-bottom: 10px;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
         }
-        .header p {
-            color: rgba(255, 255, 255, 0.7);
-            font-size: 1.1rem;
-        }
-        .chart-container {
-            background: rgba(255, 255, 255, 0.95);
-            border-radius: 20px;
-            padding: 30px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        .dashboard-header {
+            text-align: center;
             margin-bottom: 30px;
         }
-        .chart-title {
-            text-align: center;
-            color: #1a1a2e;
-            font-size: 1.5rem;
-            margin-bottom: 20px;
-            font-weight: 600;
+        .dashboard-header h1 {
+            font-size: 2.5rem;
+            background: linear-gradient(90deg, #00d4ff, #7b2cbf);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
-        .stats-grid {
+        .dashboard-header p {
+            color: #a0a0a0;
+            margin-top: 10px;
+        }
+        .kpi-container {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
             gap: 20px;
-            margin-top: 30px;
+            margin-bottom: 30px;
         }
-        .stat-card {
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 15px;
-            padding: 20px;
+        .kpi-card {
+            background: linear-gradient(145deg, #1e3a5f, #0d1b2a);
+            border-radius: 16px;
+            padding: 25px;
             text-align: center;
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(0, 212, 255, 0.2);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
             transition: transform 0.3s ease;
         }
-        .stat-card:hover {
+        .kpi-card:hover {
             transform: translateY(-5px);
         }
-        .stat-number {
+        .kpi-value {
             font-size: 2.5rem;
             font-weight: bold;
-            color: #4facfe;
-            margin-bottom: 5px;
+            color: #00d4ff;
         }
-        .stat-label {
-            color: rgba(255, 255, 255, 0.8);
+        .kpi-label {
+            color: #a0a0a0;
+            margin-top: 8px;
             font-size: 0.9rem;
         }
-        .legend-container {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            gap: 15px;
-            margin-top: 20px;
+        .kpi-card.green .kpi-value { color: #4ade80; }
+        .kpi-card.orange .kpi-value { color: #fb923c; }
+        .kpi-card.purple .kpi-value { color: #a78bfa; }
+        .kpi-card.pink .kpi-value { color: #f472b6; }
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+            gap: 25px;
         }
-        .legend-item {
+        .chart-card {
+            background: linear-gradient(145deg, #1e3a5f, #0d1b2a);
+            border-radius: 16px;
+            padding: 25px;
+            border: 1px solid rgba(0, 212, 255, 0.2);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+        .chart-card h3 {
+            margin-bottom: 20px;
+            color: #fff;
+            font-size: 1.2rem;
             display: flex;
             align-items: center;
-            gap: 8px;
-            color: #333;
-            font-size: 0.85rem;
+            gap: 10px;
         }
-        .legend-color {
-            width: 20px;
+        .chart-card h3::before {
+            content: '';
+            width: 4px;
             height: 20px;
-            border-radius: 4px;
+            background: linear-gradient(180deg, #00d4ff, #7b2cbf);
+            border-radius: 2px;
         }
-        #barChart {
-            max-height: 400px;
+        .chart-container {
+            position: relative;
+            height: 300px;
+        }
+        .chart-container.small {
+            height: 250px;
+        }
+        @media (max-width: 768px) {
+            .charts-grid {
+                grid-template-columns: 1fr;
+            }
+            .dashboard-header h1 {
+                font-size: 1.8rem;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="dashboard-container">
-        <div class="header">
-            <h1>🏭 Top 5 Lieferanten</h1>
-            <p>Übersicht der Lieferanten nach Anzahl der durchgeführten Audits</p>
+    <div class="dashboard-header">
+        <h1>📦 Lieferanten Dashboard</h1>
+        <p>Umfassende Übersicht über alle Lieferanten im System</p>
+    </div>
+
+    <div class="kpi-container">
+        <div class="kpi-card">
+            <div class="kpi-value">69.214</div>
+            <div class="kpi-label">Gesamt Lieferanten</div>
         </div>
-        
-        <div class="chart-container">
-            <h2 class="chart-title">📊 Audit-Anzahl pro Lieferant</h2>
-            <canvas id="barChart"></canvas>
+        <div class="kpi-card green">
+            <div class="kpi-value">45.216</div>
+            <div class="kpi-label">Freigegeben</div>
         </div>
-        
-        <div class="stats-grid">
-            <div class="stat-card">
-                <div class="stat-number">5</div>
-                <div class="stat-label">Top Lieferanten</div>
+        <div class="kpi-card orange">
+            <div class="kpi-value">332</div>
+            <div class="kpi-label">Kategorien</div>
+        </div>
+        <div class="kpi-card purple">
+            <div class="kpi-value">41.472</div>
+            <div class="kpi-label">Aktive Verträge</div>
+        </div>
+        <div class="kpi-card pink">
+            <div class="kpi-value">68</div>
+            <div class="kpi-label">Länder</div>
+        </div>
+    </div>
+
+    <div class="charts-grid">
+        <div class="chart-card">
+            <h3>Top 10 Länder nach Lieferantenanzahl</h3>
+            <div class="chart-container">
+                <canvas id="countryChart"></canvas>
             </div>
-            <div class="stat-card">
-                <div class="stat-number">9</div>
-                <div class="stat-label">Gesamt Audits</div>
+        </div>
+
+        <div class="chart-card">
+            <h3>Klassifizierung der Lieferanten</h3>
+            <div class="chart-container">
+                <canvas id="classificationChart"></canvas>
             </div>
-            <div class="stat-card">
-                <div class="stat-number">1.8</div>
-                <div class="stat-label">Ø Audits/Lieferant</div>
+        </div>
+
+        <div class="chart-card">
+            <h3>Freigabestatus</h3>
+            <div class="chart-container small">
+                <canvas id="releaseChart"></canvas>
             </div>
-            <div class="stat-card">
-                <div class="stat-number">2</div>
-                <div class="stat-label">Max. Audits</div>
+        </div>
+
+        <div class="chart-card">
+            <h3>Neue Lieferanten (letzte 12 Monate)</h3>
+            <div class="chart-container">
+                <canvas id="trendChart"></canvas>
+            </div>
+        </div>
+
+        <div class="chart-card">
+            <h3>Top Städte</h3>
+            <div class="chart-container">
+                <canvas id="cityChart"></canvas>
+            </div>
+        </div>
+
+        <div class="chart-card">
+            <h3>Top Kategorien</h3>
+            <div class="chart-container">
+                <canvas id="categoryChart"></canvas>
             </div>
         </div>
     </div>
-    
+
     <script>
-        const ctx = document.getElementById('barChart').getContext('2d');
-        
-        const labels = [
-            'KRAEUTLER ELEKTROMASCHINEN',
-            'NUSSER ZERSPANTECHNIK',
-            'ACTECH',
-            'HOHENLIMBURGER METALLGUSS',
-            'BARTZ-WERKE'
-        ];
-        
-        const data = [2, 2, 2, 2, 1];
-        
-        const gradient1 = ctx.createLinearGradient(0, 0, 0, 400);
-        gradient1.addColorStop(0, '#667eea');
-        gradient1.addColorStop(1, '#764ba2');
-        
-        const gradient2 = ctx.createLinearGradient(0, 0, 0, 400);
-        gradient2.addColorStop(0, '#f093fb');
-        gradient2.addColorStop(1, '#f5576c');
-        
-        const gradient3 = ctx.createLinearGradient(0, 0, 0, 400);
-        gradient3.addColorStop(0, '#4facfe');
-        gradient3.addColorStop(1, '#00f2fe');
-        
-        const gradient4 = ctx.createLinearGradient(0, 0, 0, 400);
-        gradient4.addColorStop(0, '#43e97b');
-        gradient4.addColorStop(1, '#38f9d7');
-        
-        const gradient5 = ctx.createLinearGradient(0, 0, 0, 400);
-        gradient5.addColorStop(0, '#fa709a');
-        gradient5.addColorStop(1, '#fee140');
-        
-        new Chart(ctx, {
+        const gradientColors = {
+            blue: 'rgba(0, 212, 255, 0.8)',
+            purple: 'rgba(123, 44, 191, 0.8)',
+            green: 'rgba(74, 222, 128, 0.8)',
+            orange: 'rgba(251, 146, 60, 0.8)',
+            pink: 'rgba(244, 114, 182, 0.8)',
+            cyan: 'rgba(34, 211, 238, 0.8)'
+        };
+
+        // Country Chart
+        new Chart(document.getElementById('countryChart'), {
             type: 'bar',
             data: {
-                labels: labels,
+                labels: ['DE', 'FR', 'AT', 'US', 'AU', 'CH', 'CN', 'GB', 'BR', 'CA'],
                 datasets: [{
-                    label: 'Anzahl Audits',
-                    data: data,
-                    backgroundColor: [gradient1, gradient2, gradient3, gradient4, gradient5],
-                    borderColor: ['#667eea', '#f093fb', '#4facfe', '#43e97b', '#fa709a'],
-                    borderWidth: 2,
-                    borderRadius: 10,
-                    borderSkipped: false,
+                    label: 'Lieferanten',
+                    data: [26413, 6317, 5384, 4440, 4019, 3333, 2135, 2082, 2068, 1659],
+                    backgroundColor: [
+                        '#00d4ff', '#7b2cbf', '#4ade80', '#fb923c', '#f472b6',
+                        '#22d3ee', '#a78bfa', '#fbbf24', '#34d399', '#f87171'
+                    ],
+                    borderRadius: 8
                 }]
             },
             options: {
                 responsive: true,
-                maintainAspectRatio: true,
-                plugins: {
-                    legend: {
-                        display: false
-                    },
-                    tooltip: {
-                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                        titleFont: {
-                            size: 14,
-                            weight: 'bold'
-                        },
-                        bodyFont: {
-                            size: 13
-                        },
-                        padding: 15,
-                        cornerRadius: 10,
-                        callbacks: {
-                            label: function(context) {
-                                return 'Audits: ' + context.parsed.y;
-                            }
-                        }
-                    }
-                },
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
                 scales: {
-                    y: {
-                        beginAtZero: true,
-                        max: 3,
-                        ticks: {
-                            stepSize: 1,
-                            font: {
-                                size: 12
-                            },
-                            color: '#666'
-                        },
-                        grid: {
-                            color: 'rgba(0, 0, 0, 0.1)'
-                        },
-                        title: {
-                            display: true,
-                            text: 'Anzahl Audits',
-                            font: {
-                                size: 14,
-                                weight: 'bold'
-                            },
-                            color: '#333'
-                        }
-                    },
-                    x: {
-                        ticks: {
-                            font: {
-                                size: 10
-                            },
-                            color: '#666',
-                            maxRotation: 45,
-                            minRotation: 45
-                        },
-                        grid: {
-                            display: false
-                        },
-                        title: {
-                            display: true,
-                            text: 'Lieferanten',
-                            font: {
-                                size: 14,
-                                weight: 'bold'
-                            },
-                            color: '#333'
-                        }
-                    }
-                },
-                animation: {
-                    duration: 2000,
-                    easing: 'easeOutBounce'
+                    y: { grid: { color: 'rgba(255,255,255,0.1)' }, ticks: { color: '#a0a0a0' } },
+                    x: { grid: { display: false }, ticks: { color: '#a0a0a0' } }
+                }
+            }
+        });
+
+        // Classification Chart
+        new Chart(document.getElementById('classificationChart'), {
+            type: 'doughnut',
+            data: {
+                labels: ['Active', 'Inactive', 'Specific to LH-Company', 'One Inactivates', 'Risk Supplier'],
+                datasets: [{
+                    data: [45216, 21818, 431, 287, 23],
+                    backgroundColor: ['#4ade80', '#f87171', '#fbbf24', '#a78bfa', '#f472b6'],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'right', labels: { color: '#fff', padding: 15 } }
+                }
+            }
+        });
+
+        // Release State Chart
+        new Chart(document.getElementById('releaseChart'), {
+            type: 'pie',
+            data: {
+                labels: ['Freigegeben', 'Blockiert', 'Unbekannt', 'Probational'],
+                datasets: [{
+                    data: [45216, 21818, 1726, 454],
+                    backgroundColor: ['#4ade80', '#f87171', '#94a3b8', '#fbbf24'],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'bottom', labels: { color: '#fff', padding: 15 } }
+                }
+            }
+        });
+
+        // Trend Chart
+        new Chart(document.getElementById('trendChart'), {
+            type: 'line',
+            data: {
+                labels: ['Mai 23', 'Jun 23', 'Jul 23', 'Aug 23', 'Sep 23', 'Okt 23', 'Nov 23', 'Dez 23', 'Jan 24', 'Feb 24', 'Mär 24', 'Apr 24'],
+                datasets: [{
+                    label: 'Neue Lieferanten',
+                    data: [370, 392, 318, 266, 315, 296, 355, 287, 344, 362, 417, 68],
+                    borderColor: '#00d4ff',
+                    backgroundColor: 'rgba(0, 212, 255, 0.1)',
+                    fill: true,
+                    tension: 0.4,
+                    pointBackgroundColor: '#00d4ff',
+                    pointBorderColor: '#fff',
+                    pointRadius: 5
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: { grid: { color: 'rgba(255,255,255,0.1)' }, ticks: { color: '#a0a0a0' } },
+                    x: { grid: { display: false }, ticks: { color: '#a0a0a0' } }
+                }
+            }
+        });
+
+        // City Chart
+        new Chart(document.getElementById('cityChart'), {
+            type: 'bar',
+            data: {
+                labels: ['Wien', 'München', 'Hamburg', 'Stuttgart', 'Singapore', 'Pune', 'Berlin', 'Xuzhou', 'Ulm', 'Paris'],
+                datasets: [{
+                    label: 'Lieferanten',
+                    data: [982, 646, 555, 464, 403, 381, 301, 276, 266, 264],
+                    backgroundColor: 'rgba(123, 44, 191, 0.8)',
+                    borderRadius: 8
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                indexAxis: 'y',
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { grid: { color: 'rgba(255,255,255,0.1)' }, ticks: { color: '#a0a0a0' } },
+                    y: { grid: { display: false }, ticks: { color: '#a0a0a0' } }
+                }
+            }
+        });
+
+        // Category Chart
+        new Chart(document.getElementById('categoryChart'), {
+            type: 'bar',
+            data: {
+                labels: ['Industrial truck', 'Precision parts', 'Nodular graphite', 'Safety devices', 'Norm element', 'PPE Work', 'Turning lathe', 'Steel constr.'],
+                datasets: [{
+                    label: 'Lieferanten',
+                    data: [145, 83, 62, 42, 40, 40, 33, 33],
+                    backgroundColor: 'rgba(74, 222, 128, 0.8)',
+                    borderRadius: 8
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                indexAxis: 'y',
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { grid: { color: 'rgba(255,255,255,0.1)' }, ticks: { color: '#a0a0a0' } },
+                    y: { grid: { display: false }, ticks: { color: '#a0a0a0' } }
                 }
             }
         });
