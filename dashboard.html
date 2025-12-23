@@ -24,14 +24,14 @@
         }
         .dashboard-header h1 {
             font-size: 2.5rem;
-            background: linear-gradient(90deg, #00d4ff, #7b2cbf);
+            background: linear-gradient(90deg, #00d9ff, #00ff88);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            background-clip: text;
+            margin-bottom: 10px;
         }
         .dashboard-header p {
-            color: #a0a0a0;
-            margin-top: 10px;
+            color: #8892b0;
+            font-size: 1.1rem;
         }
         .kpi-container {
             display: grid;
@@ -40,12 +40,12 @@
             margin-bottom: 30px;
         }
         .kpi-card {
-            background: linear-gradient(145deg, #1e3a5f, #0d1b2a);
+            background: linear-gradient(145deg, #1e2a4a, #253a5e);
             border-radius: 16px;
             padding: 25px;
             text-align: center;
-            border: 1px solid rgba(0, 212, 255, 0.2);
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,255,255,0.1);
             transition: transform 0.3s ease;
         }
         .kpi-card:hover {
@@ -53,51 +53,97 @@
         }
         .kpi-value {
             font-size: 2.5rem;
-            font-weight: bold;
-            color: #00d4ff;
+            font-weight: 700;
+            background: linear-gradient(90deg, #00d9ff, #00ff88);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
         }
         .kpi-label {
-            color: #a0a0a0;
+            color: #8892b0;
+            font-size: 0.95rem;
             margin-top: 8px;
-            font-size: 0.9rem;
         }
-        .kpi-card.green .kpi-value { color: #4ade80; }
-        .kpi-card.orange .kpi-value { color: #fb923c; }
-        .kpi-card.purple .kpi-value { color: #a78bfa; }
-        .kpi-card.pink .kpi-value { color: #f472b6; }
+        .kpi-icon {
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
         .charts-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
             gap: 25px;
+            margin-bottom: 30px;
         }
         .chart-card {
-            background: linear-gradient(145deg, #1e3a5f, #0d1b2a);
+            background: linear-gradient(145deg, #1e2a4a, #253a5e);
             border-radius: 16px;
             padding: 25px;
-            border: 1px solid rgba(0, 212, 255, 0.2);
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,255,255,0.1);
         }
         .chart-card h3 {
-            margin-bottom: 20px;
             color: #fff;
+            margin-bottom: 20px;
             font-size: 1.2rem;
             display: flex;
             align-items: center;
             gap: 10px;
         }
-        .chart-card h3::before {
-            content: '';
-            width: 4px;
-            height: 20px;
-            background: linear-gradient(180deg, #00d4ff, #7b2cbf);
-            border-radius: 2px;
-        }
         .chart-container {
             position: relative;
             height: 300px;
         }
-        .chart-container.small {
-            height: 250px;
+        .table-container {
+            overflow-x: auto;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        th {
+            background: rgba(0, 217, 255, 0.1);
+            color: #00d9ff;
+            font-weight: 600;
+        }
+        tr:hover {
+            background: rgba(255,255,255,0.05);
+        }
+        .badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+        .badge-success {
+            background: rgba(0, 255, 136, 0.2);
+            color: #00ff88;
+        }
+        .badge-warning {
+            background: rgba(255, 193, 7, 0.2);
+            color: #ffc107;
+        }
+        .badge-danger {
+            background: rgba(255, 82, 82, 0.2);
+            color: #ff5252;
+        }
+        .badge-info {
+            background: rgba(0, 217, 255, 0.2);
+            color: #00d9ff;
+        }
+        .progress-bar {
+            height: 8px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        .progress-fill {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 0.5s ease;
         }
         @media (max-width: 768px) {
             .charts-grid {
@@ -111,71 +157,90 @@
 </head>
 <body>
     <div class="dashboard-header">
-        <h1>📦 Lieferanten Dashboard</h1>
-        <p>Umfassende Übersicht über alle Lieferanten im System</p>
+        <h1>🏭 Lieferanten Dashboard</h1>
+        <p>Übersicht über alle registrierten Lieferanten</p>
     </div>
 
     <div class="kpi-container">
         <div class="kpi-card">
-            <div class="kpi-value">69.214</div>
-            <div class="kpi-label">Gesamt Lieferanten</div>
+            <div class="kpi-icon">🏢</div>
+            <div class="kpi-value">68.980</div>
+            <div class="kpi-label">Gesamte Lieferanten</div>
         </div>
-        <div class="kpi-card green">
-            <div class="kpi-value">45.216</div>
-            <div class="kpi-label">Freigegeben</div>
+        <div class="kpi-card">
+            <div class="kpi-icon">✅</div>
+            <div class="kpi-value">45.196</div>
+            <div class="kpi-label">Aktive Lieferanten</div>
         </div>
-        <div class="kpi-card orange">
+        <div class="kpi-card">
+            <div class="kpi-icon">🌍</div>
+            <div class="kpi-value">65+</div>
+            <div class="kpi-label">Länder</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-icon">📁</div>
             <div class="kpi-value">332</div>
             <div class="kpi-label">Kategorien</div>
-        </div>
-        <div class="kpi-card purple">
-            <div class="kpi-value">41.472</div>
-            <div class="kpi-label">Aktive Verträge</div>
-        </div>
-        <div class="kpi-card pink">
-            <div class="kpi-value">68</div>
-            <div class="kpi-label">Länder</div>
         </div>
     </div>
 
     <div class="charts-grid">
         <div class="chart-card">
-            <h3>Top 10 Länder nach Lieferantenanzahl</h3>
+            <h3>🌍 Top 10 Länder</h3>
             <div class="chart-container">
                 <canvas id="countryChart"></canvas>
             </div>
         </div>
-
         <div class="chart-card">
-            <h3>Klassifizierung der Lieferanten</h3>
+            <h3>📊 Freigabestatus</h3>
             <div class="chart-container">
-                <canvas id="classificationChart"></canvas>
+                <canvas id="releaseStateChart"></canvas>
             </div>
         </div>
-
         <div class="chart-card">
-            <h3>Freigabestatus</h3>
-            <div class="chart-container small">
-                <canvas id="releaseChart"></canvas>
-            </div>
-        </div>
-
-        <div class="chart-card">
-            <h3>Neue Lieferanten (letzte 12 Monate)</h3>
+            <h3>📈 Neue Lieferanten pro Monat (2023-2024)</h3>
             <div class="chart-container">
                 <canvas id="trendChart"></canvas>
             </div>
         </div>
-
         <div class="chart-card">
-            <h3>Top Städte</h3>
+            <h3>🏷️ Klassifizierung</h3>
             <div class="chart-container">
-                <canvas id="cityChart"></canvas>
+                <canvas id="classificationChart"></canvas>
             </div>
         </div>
+    </div>
 
+    <div class="charts-grid">
         <div class="chart-card">
-            <h3>Top Kategorien</h3>
+            <h3>🏙️ Top 10 Städte</h3>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Rang</th>
+                            <th>Stadt</th>
+                            <th>Anzahl</th>
+                            <th>Anteil</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>1</td><td>Wien</td><td>981</td><td><div class="progress-bar"><div class="progress-fill" style="width: 100%; background: linear-gradient(90deg, #00d9ff, #00ff88);"></div></div></td></tr>
+                        <tr><td>2</td><td>München</td><td>645</td><td><div class="progress-bar"><div class="progress-fill" style="width: 65.7%; background: linear-gradient(90deg, #00d9ff, #00ff88);"></div></div></td></tr>
+                        <tr><td>3</td><td>Hamburg</td><td>553</td><td><div class="progress-bar"><div class="progress-fill" style="width: 56.4%; background: linear-gradient(90deg, #00d9ff, #00ff88);"></div></div></td></tr>
+                        <tr><td>4</td><td>Stuttgart</td><td>463</td><td><div class="progress-bar"><div class="progress-fill" style="width: 47.2%; background: linear-gradient(90deg, #00d9ff, #00ff88);"></div></div></td></tr>
+                        <tr><td>5</td><td>Singapore</td><td>402</td><td><div class="progress-bar"><div class="progress-fill" style="width: 41%; background: linear-gradient(90deg, #00d9ff, #00ff88);"></div></div></td></tr>
+                        <tr><td>6</td><td>Pune</td><td>378</td><td><div class="progress-bar"><div class="progress-fill" style="width: 38.5%; background: linear-gradient(90deg, #00d9ff, #00ff88);"></div></div></td></tr>
+                        <tr><td>7</td><td>Berlin</td><td>300</td><td><div class="progress-bar"><div class="progress-fill" style="width: 30.6%; background: linear-gradient(90deg, #00d9ff, #00ff88);"></div></div></td></tr>
+                        <tr><td>8</td><td>Xuzhou</td><td>276</td><td><div class="progress-bar"><div class="progress-fill" style="width: 28.1%; background: linear-gradient(90deg, #00d9ff, #00ff88);"></div></div></td></tr>
+                        <tr><td>9</td><td>Ulm</td><td>266</td><td><div class="progress-bar"><div class="progress-fill" style="width: 27.1%; background: linear-gradient(90deg, #00d9ff, #00ff88);"></div></div></td></tr>
+                        <tr><td>10</td><td>Paris</td><td>264</td><td><div class="progress-bar"><div class="progress-fill" style="width: 26.9%; background: linear-gradient(90deg, #00d9ff, #00ff88);"></div></div></td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="chart-card">
+            <h3>📦 Top Kategorien nach Lieferantenanzahl</h3>
             <div class="chart-container">
                 <canvas id="categoryChart"></canvas>
             </div>
@@ -183,14 +248,9 @@
     </div>
 
     <script>
-        const gradientColors = {
-            blue: 'rgba(0, 212, 255, 0.8)',
-            purple: 'rgba(123, 44, 191, 0.8)',
-            green: 'rgba(74, 222, 128, 0.8)',
-            orange: 'rgba(251, 146, 60, 0.8)',
-            pink: 'rgba(244, 114, 182, 0.8)',
-            cyan: 'rgba(34, 211, 238, 0.8)'
-        };
+        // Chart.js Global Config
+        Chart.defaults.color = '#8892b0';
+        Chart.defaults.borderColor = 'rgba(255,255,255,0.1)';
 
         // Country Chart
         new Chart(document.getElementById('countryChart'), {
@@ -198,62 +258,68 @@
             data: {
                 labels: ['DE', 'FR', 'AT', 'US', 'AU', 'CH', 'CN', 'GB', 'BR', 'CA'],
                 datasets: [{
-                    label: 'Lieferanten',
-                    data: [26413, 6317, 5384, 4440, 4019, 3333, 2135, 2082, 2068, 1659],
+                    label: 'Anzahl Lieferanten',
+                    data: [26325, 6289, 5371, 4410, 4011, 3324, 2125, 2079, 2065, 1657],
                     backgroundColor: [
-                        '#00d4ff', '#7b2cbf', '#4ade80', '#fb923c', '#f472b6',
-                        '#22d3ee', '#a78bfa', '#fbbf24', '#34d399', '#f87171'
+                        'rgba(0, 217, 255, 0.8)',
+                        'rgba(0, 255, 136, 0.8)',
+                        'rgba(255, 193, 7, 0.8)',
+                        'rgba(156, 39, 176, 0.8)',
+                        'rgba(255, 82, 82, 0.8)',
+                        'rgba(0, 150, 136, 0.8)',
+                        'rgba(233, 30, 99, 0.8)',
+                        'rgba(63, 81, 181, 0.8)',
+                        'rgba(139, 195, 74, 0.8)',
+                        'rgba(255, 152, 0, 0.8)'
                     ],
-                    borderRadius: 8
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: { legend: { display: false } },
-                scales: {
-                    y: { grid: { color: 'rgba(255,255,255,0.1)' }, ticks: { color: '#a0a0a0' } },
-                    x: { grid: { display: false }, ticks: { color: '#a0a0a0' } }
-                }
-            }
-        });
-
-        // Classification Chart
-        new Chart(document.getElementById('classificationChart'), {
-            type: 'doughnut',
-            data: {
-                labels: ['Active', 'Inactive', 'Specific to LH-Company', 'One Inactivates', 'Risk Supplier'],
-                datasets: [{
-                    data: [45216, 21818, 431, 287, 23],
-                    backgroundColor: ['#4ade80', '#f87171', '#fbbf24', '#a78bfa', '#f472b6'],
-                    borderWidth: 0
+                    borderRadius: 8,
+                    borderSkipped: false
                 }]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
                 plugins: {
-                    legend: { position: 'right', labels: { color: '#fff', padding: 15 } }
+                    legend: { display: false }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: { color: 'rgba(255,255,255,0.05)' }
+                    },
+                    x: {
+                        grid: { display: false }
+                    }
                 }
             }
         });
 
         // Release State Chart
-        new Chart(document.getElementById('releaseChart'), {
-            type: 'pie',
+        new Chart(document.getElementById('releaseStateChart'), {
+            type: 'doughnut',
             data: {
-                labels: ['Freigegeben', 'Blockiert', 'Unbekannt', 'Probational'],
+                labels: ['Freigegeben', 'Blockiert', 'Unbekannt', 'Probeweise'],
                 datasets: [{
-                    data: [45216, 21818, 1726, 454],
-                    backgroundColor: ['#4ade80', '#f87171', '#94a3b8', '#fbbf24'],
-                    borderWidth: 0
+                    data: [45196, 21817, 1513, 454],
+                    backgroundColor: [
+                        'rgba(0, 255, 136, 0.8)',
+                        'rgba(255, 82, 82, 0.8)',
+                        'rgba(158, 158, 158, 0.8)',
+                        'rgba(255, 193, 7, 0.8)'
+                    ],
+                    borderWidth: 0,
+                    hoverOffset: 10
                 }]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
+                cutout: '65%',
                 plugins: {
-                    legend: { position: 'bottom', labels: { color: '#fff', padding: 15 } }
+                    legend: {
+                        position: 'bottom',
+                        labels: { padding: 20, usePointStyle: true }
+                    }
                 }
             }
         });
@@ -262,50 +328,61 @@
         new Chart(document.getElementById('trendChart'), {
             type: 'line',
             data: {
-                labels: ['Mai 23', 'Jun 23', 'Jul 23', 'Aug 23', 'Sep 23', 'Okt 23', 'Nov 23', 'Dez 23', 'Jan 24', 'Feb 24', 'Mär 24', 'Apr 24'],
+                labels: ['Jan 23', 'Feb 23', 'Mär 23', 'Apr 23', 'Mai 23', 'Jun 23', 'Jul 23', 'Aug 23', 'Sep 23', 'Okt 23', 'Nov 23', 'Dez 23', 'Jan 24', 'Feb 24', 'Mär 24', 'Apr 24'],
                 datasets: [{
                     label: 'Neue Lieferanten',
-                    data: [370, 392, 318, 266, 315, 296, 355, 287, 344, 362, 417, 68],
-                    borderColor: '#00d4ff',
-                    backgroundColor: 'rgba(0, 212, 255, 0.1)',
+                    data: [695, 295, 386, 291, 370, 392, 318, 266, 315, 296, 354, 287, 344, 362, 416, 68],
+                    borderColor: 'rgba(0, 217, 255, 1)',
+                    backgroundColor: 'rgba(0, 217, 255, 0.1)',
                     fill: true,
                     tension: 0.4,
-                    pointBackgroundColor: '#00d4ff',
-                    pointBorderColor: '#fff',
-                    pointRadius: 5
+                    pointRadius: 4,
+                    pointBackgroundColor: 'rgba(0, 217, 255, 1)'
                 }]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                plugins: { legend: { display: false } },
+                plugins: {
+                    legend: { display: false }
+                },
                 scales: {
-                    y: { grid: { color: 'rgba(255,255,255,0.1)' }, ticks: { color: '#a0a0a0' } },
-                    x: { grid: { display: false }, ticks: { color: '#a0a0a0' } }
+                    y: {
+                        beginAtZero: true,
+                        grid: { color: 'rgba(255,255,255,0.05)' }
+                    },
+                    x: {
+                        grid: { display: false }
+                    }
                 }
             }
         });
 
-        // City Chart
-        new Chart(document.getElementById('cityChart'), {
-            type: 'bar',
+        // Classification Chart
+        new Chart(document.getElementById('classificationChart'), {
+            type: 'pie',
             data: {
-                labels: ['Wien', 'München', 'Hamburg', 'Stuttgart', 'Singapore', 'Pune', 'Berlin', 'Xuzhou', 'Ulm', 'Paris'],
+                labels: ['Aktiv', 'Inaktiv', 'Aktiv (LH-Spezifisch)', 'Wird deaktiviert', 'Aktiv (Risiko)'],
                 datasets: [{
-                    label: 'Lieferanten',
-                    data: [982, 646, 555, 464, 403, 381, 301, 276, 266, 264],
-                    backgroundColor: 'rgba(123, 44, 191, 0.8)',
-                    borderRadius: 8
+                    data: [45196, 21817, 431, 287, 23],
+                    backgroundColor: [
+                        'rgba(0, 255, 136, 0.8)',
+                        'rgba(158, 158, 158, 0.8)',
+                        'rgba(0, 217, 255, 0.8)',
+                        'rgba(255, 193, 7, 0.8)',
+                        'rgba(255, 82, 82, 0.8)'
+                    ],
+                    borderWidth: 0
                 }]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                indexAxis: 'y',
-                plugins: { legend: { display: false } },
-                scales: {
-                    x: { grid: { color: 'rgba(255,255,255,0.1)' }, ticks: { color: '#a0a0a0' } },
-                    y: { grid: { display: false }, ticks: { color: '#a0a0a0' } }
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: { padding: 15, usePointStyle: true, font: { size: 11 } }
+                    }
                 }
             }
         });
@@ -314,22 +391,30 @@
         new Chart(document.getElementById('categoryChart'), {
             type: 'bar',
             data: {
-                labels: ['Industrial truck', 'Precision parts', 'Nodular graphite', 'Safety devices', 'Norm element', 'PPE Work', 'Turning lathe', 'Steel constr.'],
+                labels: ['Industrial truck', 'Precision turned parts', 'Nodular graphite iron', 'Electrical safety', 'Norm element', 'PPE Work protection', 'Turning lathe', 'Steel constr.'],
                 datasets: [{
                     label: 'Lieferanten',
                     data: [145, 83, 62, 42, 40, 40, 33, 33],
-                    backgroundColor: 'rgba(74, 222, 128, 0.8)',
-                    borderRadius: 8
+                    backgroundColor: 'rgba(0, 255, 136, 0.8)',
+                    borderRadius: 8,
+                    borderSkipped: false
                 }]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
                 indexAxis: 'y',
-                plugins: { legend: { display: false } },
+                plugins: {
+                    legend: { display: false }
+                },
                 scales: {
-                    x: { grid: { color: 'rgba(255,255,255,0.1)' }, ticks: { color: '#a0a0a0' } },
-                    y: { grid: { display: false }, ticks: { color: '#a0a0a0' } }
+                    x: {
+                        beginAtZero: true,
+                        grid: { color: 'rgba(255,255,255,0.05)' }
+                    },
+                    y: {
+                        grid: { display: false }
+                    }
                 }
             }
         });
