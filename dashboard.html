@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RFQs pro Jahr - Dashboard</title>
+    <title>RFQ-Analyse 2022 vs 2023</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
     <style>
         * {
             margin: 0;
@@ -13,219 +14,367 @@
         }
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4e8ec 100%);
             min-height: 100vh;
             padding: 20px;
         }
-        .dashboard-container {
-            max-width: 1200px;
+        .container {
+            max-width: 1400px;
             margin: 0 auto;
         }
         .header {
             text-align: center;
-            margin-bottom: 40px;
-            color: #fff;
+            margin-bottom: 30px;
+            padding: 30px;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
         }
         .header h1 {
-            font-size: 2.5rem;
+            color: #2c3e50;
+            font-size: 2.2rem;
             margin-bottom: 10px;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
         }
         .header p {
+            color: #7f8c8d;
             font-size: 1.1rem;
-            color: #a0aec0;
         }
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
             gap: 20px;
-            margin-bottom: 40px;
+            margin-bottom: 30px;
         }
         .stat-card {
-            background: rgba(255,255,255,0.1);
-            backdrop-filter: blur(10px);
-            border-radius: 15px;
+            background: white;
+            border-radius: 16px;
             padding: 25px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
             text-align: center;
-            border: 1px solid rgba(255,255,255,0.2);
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            transition: transform 0.3s ease;
         }
         .stat-card:hover {
             transform: translateY(-5px);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
         }
-        .stat-card h3 {
-            color: #a0aec0;
-            font-size: 0.9rem;
-            margin-bottom: 10px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
+        .stat-card.blue {
+            border-left: 5px solid #3498db;
         }
-        .stat-card .value {
-            color: #fff;
-            font-size: 2.2rem;
-            font-weight: bold;
+        .stat-card.red {
+            border-left: 5px solid #e74c3c;
         }
-        .stat-card .year {
-            color: #4fd1c5;
-            font-size: 0.9rem;
+        .stat-card.green {
+            border-left: 5px solid #27ae60;
+        }
+        .stat-card.purple {
+            border-left: 5px solid #9b59b6;
+        }
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #2c3e50;
+        }
+        .stat-label {
+            color: #7f8c8d;
+            font-size: 0.95rem;
             margin-top: 5px;
         }
         .chart-container {
-            background: rgba(255,255,255,0.1);
-            backdrop-filter: blur(10px);
-            border-radius: 20px;
+            background: white;
+            border-radius: 16px;
             padding: 30px;
-            border: 1px solid rgba(255,255,255,0.2);
-            box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            margin-bottom: 30px;
         }
         .chart-title {
-            color: #fff;
-            font-size: 1.5rem;
+            font-size: 1.4rem;
+            color: #2c3e50;
             margin-bottom: 20px;
             text-align: center;
         }
-        canvas {
-            max-height: 400px;
+        .chart-wrapper {
+            position: relative;
+            height: 450px;
         }
-        .footer {
+        .legend-container {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            margin-top: 20px;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1rem;
+            color: #2c3e50;
+        }
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+        }
+        .legend-color.blue {
+            background: #3498db;
+        }
+        .legend-color.red {
+            background: #e74c3c;
+        }
+        .table-container {
+            background: white;
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .data-table th, .data-table td {
+            padding: 15px;
             text-align: center;
-            margin-top: 30px;
-            color: #a0aec0;
-            font-size: 0.9rem;
+            border-bottom: 1px solid #ecf0f1;
+        }
+        .data-table th {
+            background: #f8f9fa;
+            color: #2c3e50;
+            font-weight: 600;
+        }
+        .data-table tr:hover {
+            background: #f8f9fa;
+        }
+        .positive {
+            color: #27ae60;
+            font-weight: 600;
+        }
+        .negative {
+            color: #e74c3c;
+            font-weight: 600;
         }
     </style>
 </head>
 <body>
-    <div class="dashboard-container">
+    <div class="container">
         <div class="header">
-            <h1>📊 RFQs pro Jahr</h1>
-            <p>Übersicht aller Request for Quotations nach Jahr</p>
+            <h1>📊 RFQ-Analyse: Jahresvergleich 2022 vs 2023</h1>
+            <p>Monatliche Übersicht der Anfragen (Request for Quotation)</p>
         </div>
         
         <div class="stats-grid">
-            <div class="stat-card">
-                <h3>Gesamt RFQs</h3>
-                <div class="value">37.348</div>
-                <div class="year">2020 - 2024</div>
+            <div class="stat-card blue">
+                <div class="stat-value" id="total2023">10,945</div>
+                <div class="stat-label">Gesamt RFQs 2023</div>
             </div>
-            <div class="stat-card">
-                <h3>Höchstes Jahr</h3>
-                <div class="value">10.979</div>
-                <div class="year">2022</div>
+            <div class="stat-card red">
+                <div class="stat-value" id="total2022">10,979</div>
+                <div class="stat-label">Gesamt RFQs 2022</div>
             </div>
-            <div class="stat-card">
-                <h3>Durchschnitt/Jahr</h3>
-                <div class="value">7.470</div>
-                <div class="year">Ø pro Jahr</div>
+            <div class="stat-card green">
+                <div class="stat-value" id="avgDiff">912</div>
+                <div class="stat-label">Durchschnitt/Monat 2023</div>
             </div>
-            <div class="stat-card">
-                <h3>Aktuelles Jahr</h3>
-                <div class="value">3.264</div>
-                <div class="year">2024</div>
+            <div class="stat-card purple">
+                <div class="stat-value" id="maxMonth">Juli</div>
+                <div class="stat-label">Stärkster Monat 2023</div>
             </div>
         </div>
         
         <div class="chart-container">
-            <h2 class="chart-title">Anzahl RFQs pro Jahr</h2>
-            <canvas id="rfqChart"></canvas>
+            <h2 class="chart-title">Monatliche RFQ-Entwicklung</h2>
+            <div class="chart-wrapper">
+                <canvas id="rfqChart"></canvas>
+            </div>
+            <div class="legend-container">
+                <div class="legend-item">
+                    <div class="legend-color blue"></div>
+                    <span>2023 (Aktuelles Jahr) - Balkendiagramm</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color red"></div>
+                    <span>2022 (Vorjahr) - Liniendiagramm</span>
+                </div>
+            </div>
         </div>
         
-        <div class="footer">
-            <p>Dashboard erstellt am: <span id="currentDate"></span></p>
+        <div class="table-container">
+            <h2 class="chart-title">Detaillierte Monatsdaten</h2>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Monat</th>
+                        <th>2023</th>
+                        <th>2022</th>
+                        <th>Differenz</th>
+                        <th>Veränderung %</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody">
+                </tbody>
+            </table>
         </div>
     </div>
     
     <script>
-        document.getElementById('currentDate').textContent = new Date().toLocaleDateString('de-DE', {
-            day: '2-digit',
-            month: '2-digit',
-            year: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
-        });
+        Chart.register(ChartDataLabels);
         
+        const months = ['Jan', 'Feb', 'Mär', 'Apr', 'Mai', 'Jun', 'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dez'];
+        const monthsFull = ['Januar', 'Februar', 'März', 'April', 'Mai', 'Juni', 'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember'];
+        
+        const data2023 = [799, 817, 1020, 816, 1027, 1030, 1072, 694, 947, 962, 1014, 747];
+        const data2022 = [743, 1115, 1166, 798, 947, 991, 1074, 629, 894, 951, 897, 774];
+        
+        // Chart
         const ctx = document.getElementById('rfqChart').getContext('2d');
-        
-        const gradient = ctx.createLinearGradient(0, 0, 0, 400);
-        gradient.addColorStop(0, 'rgba(79, 209, 197, 0.8)');
-        gradient.addColorStop(1, 'rgba(79, 209, 197, 0.2)');
-        
-        new Chart(ctx, {
+        const rfqChart = new Chart(ctx, {
             type: 'bar',
             data: {
-                labels: ['2020', '2021', '2022', '2023', '2024'],
-                datasets: [{
-                    label: 'Anzahl RFQs',
-                    data: [2340, 9820, 10979, 10945, 3264],
-                    backgroundColor: [
-                        'rgba(99, 102, 241, 0.8)',
-                        'rgba(79, 209, 197, 0.8)',
-                        'rgba(34, 197, 94, 0.8)',
-                        'rgba(251, 191, 36, 0.8)',
-                        'rgba(244, 114, 182, 0.8)'
-                    ],
-                    borderColor: [
-                        'rgba(99, 102, 241, 1)',
-                        'rgba(79, 209, 197, 1)',
-                        'rgba(34, 197, 94, 1)',
-                        'rgba(251, 191, 36, 1)',
-                        'rgba(244, 114, 182, 1)'
-                    ],
-                    borderWidth: 2,
-                    borderRadius: 10,
-                    borderSkipped: false
-                }]
+                labels: months,
+                datasets: [
+                    {
+                        label: '2023',
+                        data: data2023,
+                        backgroundColor: 'rgba(52, 152, 219, 0.8)',
+                        borderColor: '#3498db',
+                        borderWidth: 2,
+                        borderRadius: 6,
+                        order: 2,
+                        datalabels: {
+                            anchor: 'end',
+                            align: 'top',
+                            color: '#3498db',
+                            font: {
+                                weight: 'bold',
+                                size: 11
+                            },
+                            formatter: function(value) {
+                                return value.toLocaleString('de-DE');
+                            }
+                        }
+                    },
+                    {
+                        label: '2022',
+                        data: data2022,
+                        type: 'line',
+                        borderColor: '#e74c3c',
+                        backgroundColor: 'rgba(231, 76, 60, 0.1)',
+                        borderWidth: 3,
+                        pointBackgroundColor: '#e74c3c',
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2,
+                        pointRadius: 6,
+                        pointHoverRadius: 8,
+                        tension: 0.3,
+                        fill: false,
+                        order: 1,
+                        datalabels: {
+                            anchor: 'end',
+                            align: 'top',
+                            color: '#e74c3c',
+                            font: {
+                                weight: 'bold',
+                                size: 11
+                            },
+                            offset: 8,
+                            formatter: function(value) {
+                                return value.toLocaleString('de-DE');
+                            }
+                        }
+                    }
+                ]
             },
             options: {
                 responsive: true,
-                maintainAspectRatio: true,
+                maintainAspectRatio: false,
+                interaction: {
+                    intersect: false,
+                    mode: 'index'
+                },
                 plugins: {
                     legend: {
                         display: false
                     },
                     tooltip: {
-                        backgroundColor: 'rgba(0,0,0,0.8)',
+                        backgroundColor: 'rgba(44, 62, 80, 0.95)',
+                        titleFont: {
+                            size: 14,
+                            weight: 'bold'
+                        },
+                        bodyFont: {
+                            size: 13
+                        },
                         padding: 15,
-                        titleFont: { size: 16 },
-                        bodyFont: { size: 14 },
+                        cornerRadius: 10,
                         callbacks: {
                             label: function(context) {
-                                return 'RFQs: ' + context.parsed.y.toLocaleString('de-DE');
+                                return context.dataset.label + ': ' + context.parsed.y.toLocaleString('de-DE') + ' RFQs';
                             }
                         }
                     }
                 },
                 scales: {
-                    y: {
-                        beginAtZero: true,
-                        grid: {
-                            color: 'rgba(255,255,255,0.1)'
-                        },
-                        ticks: {
-                            color: '#a0aec0',
-                            font: { size: 12 },
-                            callback: function(value) {
-                                return value.toLocaleString('de-DE');
-                            }
-                        }
-                    },
                     x: {
                         grid: {
                             display: false
                         },
                         ticks: {
-                            color: '#a0aec0',
-                            font: { size: 14, weight: 'bold' }
+                            font: {
+                                size: 12,
+                                weight: '500'
+                            },
+                            color: '#7f8c8d'
+                        }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        max: 1400,
+                        grid: {
+                            color: 'rgba(0, 0, 0, 0.05)'
+                        },
+                        ticks: {
+                            font: {
+                                size: 12
+                            },
+                            color: '#7f8c8d',
+                            callback: function(value) {
+                                return value.toLocaleString('de-DE');
+                            }
                         }
                     }
-                },
-                animation: {
-                    duration: 1500,
-                    easing: 'easeOutQuart'
                 }
             }
         });
+        
+        // Table
+        const tableBody = document.getElementById('tableBody');
+        for (let i = 0; i < 12; i++) {
+            const diff = data2023[i] - data2022[i];
+            const pct = ((diff / data2022[i]) * 100).toFixed(1);
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td><strong>${monthsFull[i]}</strong></td>
+                <td>${data2023[i].toLocaleString('de-DE')}</td>
+                <td>${data2022[i].toLocaleString('de-DE')}</td>
+                <td class="${diff >= 0 ? 'positive' : 'negative'}">${diff >= 0 ? '+' : ''}${diff.toLocaleString('de-DE')}</td>
+                <td class="${diff >= 0 ? 'positive' : 'negative'}">${diff >= 0 ? '+' : ''}${pct}%</td>
+            `;
+            tableBody.appendChild(row);
+        }
+        
+        // Total row
+        const total2023 = data2023.reduce((a, b) => a + b, 0);
+        const total2022 = data2022.reduce((a, b) => a + b, 0);
+        const totalDiff = total2023 - total2022;
+        const totalPct = ((totalDiff / total2022) * 100).toFixed(1);
+        const totalRow = document.createElement('tr');
+        totalRow.style.fontWeight = 'bold';
+        totalRow.style.backgroundColor = '#f8f9fa';
+        totalRow.innerHTML = `
+            <td><strong>GESAMT</strong></td>
+            <td>${total2023.toLocaleString('de-DE')}</td>
+            <td>${total2022.toLocaleString('de-DE')}</td>
+            <td class="${totalDiff >= 0 ? 'positive' : 'negative'}">${totalDiff >= 0 ? '+' : ''}${totalDiff.toLocaleString('de-DE')}</td>
+            <td class="${totalDiff >= 0 ? 'positive' : 'negative'}">${totalDiff >= 0 ? '+' : ''}${totalPct}%</td>
+        `;
+        tableBody.appendChild(totalRow);
     </script>
 </body>
 </html>
