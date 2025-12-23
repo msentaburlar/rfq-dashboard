@@ -3,8 +3,14 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Datenanalyse mit AI</title>
+  <title>Datenanalyse & Dashboard</title>
+
+  <!-- Markdown -->
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
   <style>
     :root {
       font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
@@ -45,7 +51,6 @@
       padding: 14px 16px;
       border-bottom: 1px solid var(--border);
       font-weight: 700;
-      background: var(--card-bg);
     }
 
     .sub {
@@ -66,10 +71,10 @@
       font-size: 14px;
     }
 
-    .user { background: #e8f0ff; margin-left: auto; border-bottom-right-radius: 4px; }
-    .bot { background: #f3f4f6; border-bottom-left-radius: 4px; }
-    .bot.error { background: #fef2f2; color: #b91c1c; }
+    .user { background: #e8f0ff; margin-left: auto; }
+    .bot { background: #f3f4f6; }
     .bot.success { background: #f0fdf4; color: #166534; }
+    .bot.error { background: #fef2f2; color: #b91c1c; }
 
     .composer {
       padding: 12px;
@@ -87,11 +92,7 @@
       height: 48px;
       outline: none;
       font-family: inherit;
-      font-size: 14px;
-      transition: border-color 0.2s;
     }
-
-    textarea:focus { border-color: var(--primary); }
 
     button {
       border: 0;
@@ -101,12 +102,7 @@
       border-radius: 10px;
       font-weight: 700;
       cursor: pointer;
-      font-size: 14px;
-      transition: background 0.2s;
     }
-
-    button:hover:not(:disabled) { background: var(--primary-hover); }
-    button:disabled { opacity: 0.6; cursor: not-allowed; }
 
     .out { padding: 14px 16px; overflow: auto; flex: 1; }
 
@@ -119,431 +115,203 @@
     }
 
     .tag {
-      display: inline-block;
       font-size: 11px;
-      font-weight: 600;
-      padding: 3px 10px;
-      border-radius: 999px;
-      background: #eef2ff;
-      color: #3730a3;
-      margin-bottom: 10px;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
+      font-weight: 700;
+      margin-bottom: 8px;
+      display: inline-block;
+      color: #166534;
     }
 
-    .tag.dashboard { background: #f0fdf4; color: #166534; }
-    .tag.error { background: #fef2f2; color: #b91c1c; }
-
-    .hint { color: var(--text-muted); font-size: 13px; }
-
-    .dashboard-container {
+    table {
       width: 100%;
-      min-height: 500px;
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      background: #fff;
-      overflow: hidden;
-      position: relative;
-    }
-
-    .dashboard-container iframe {
-      width: 100%;
-      height: 75vh;
-      border: none;
-      border-radius: 12px;
-    }
-
-    .loading {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      color: var(--text-muted);
+      border-collapse: collapse;
       font-size: 13px;
     }
 
-    .spinner {
-      width: 16px;
-      height: 16px;
-      border: 2px solid var(--border);
-      border-top-color: var(--primary);
-      border-radius: 50%;
-      animation: spin 0.8s linear infinite;
+    th, td {
+      padding: 8px 10px;
+      border-bottom: 1px solid #eee;
+      text-align: left;
     }
 
-    @keyframes spin { to { transform: rotate(360deg); } }
+    th { background: #f3f4f6; }
 
-    .answer-content { line-height: 1.7; font-size: 14px; }
-    .answer-content h1, .answer-content h2, .answer-content h3 { margin: 16px 0 8px 0; color: var(--text); font-weight: 600; }
-    .answer-content h2 { color: var(--primary); }
-    .answer-content table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 13px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); border-radius: 8px; overflow: hidden; }
-    .answer-content thead { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
-    .answer-content th { padding: 12px 14px; text-align: left; font-weight: 600; }
-    .answer-content td { padding: 10px 14px; border-bottom: 1px solid #eee; }
-    .answer-content tbody tr:hover { background: #f8fafc; }
-    .answer-content ul, .answer-content ol { margin: 12px 0; padding-left: 24px; }
-    .answer-content li { margin: 6px 0; }
-    .answer-content strong { color: var(--primary); }
-
-    /* Refresh Button für Dashboard */
-    .refresh-btn {
-      position: absolute;
-      top: 10px;
-      right: 10px;
-      background: var(--primary);
-      color: white;
-      border: none;
-      padding: 6px 12px;
-      border-radius: 6px;
-      font-size: 12px;
-      cursor: pointer;
-      z-index: 10;
-      display: flex;
-      align-items: center;
-      gap: 4px;
-    }
-    .refresh-btn:hover { background: var(--primary-hover); }
-
-    /* GitHub Pages Hinweis */
-    .github-note {
-      font-size: 11px;
-      color: var(--text-muted);
-      text-align: center;
-      margin-top: 8px;
-    }
-    .github-note a {
-      color: var(--primary);
-      text-decoration: none;
-    }
+    canvas { max-height: 260px; }
   </style>
 </head>
+
 <body>
-  <div class="app">
-    <!-- LEFT: CHAT -->
-    <div class="panel">
-      <div class="header">
-         Datenanalyse & Dashboard
-        <div class="sub"> Frage eingeben – Analyse und Visualisierung erhalten</div>
-      </div>
+<div class="app">
 
-      <div id="chatlog" class="chatlog">
-        <div class="msg bot">
-          Hi! Frag z.B. „Gib mir die gesamte Anzahl von RFQs" oder „Erstelle mir ein Dashboard mit RFQs als Balkendiagramm".
-        </div>
-      </div>
-
-      <div class="composer">
-        <textarea id="input" placeholder="Schreibe deine Frage..."></textarea>
-        <button id="send">Senden</button>
-      </div>
+  <!-- CHAT -->
+  <div class="panel">
+    <div class="header">
+      Datenanalyse
+      <div class="sub">Frage stellen – Analyse & Visualisierung erhalten</div>
     </div>
 
-    <!-- RIGHT: OUTPUT -->
-    <div class="panel">
-      <div class="header">
-        Output
-        <div class="sub">Text oder Dashboard wird hier angezeigt</div>
-      </div>
+    <div id="chatlog" class="chatlog">
+      <div class="msg bot">Stelle eine Frage oder bitte um ein Dashboard.</div>
+    </div>
 
-      <div id="output" class="out">
-        <div class="hint">Noch keine Antwort. Sende links eine Frage.</div>
-      </div>
+    <div class="composer">
+      <textarea id="input" placeholder="Deine Frage..."></textarea>
+      <button id="send">Senden</button>
     </div>
   </div>
 
-  <script>
-    // ============================================================
-    // KONFIGURATION
-    // ============================================================
-    const CONFIG = {
-      WEBHOOK_URL: "https://yraq0l4j.rpcld.cc/webhook/rfq-chat",
-      DASHBOARD_BASE_URL: "https://msentaburlar.github.io/rfq-dashboard/dashboard.html",
-      TIMEOUT: 120000,
-      // Verzögerung bevor iframe geladen wird (GitHub Pages braucht Zeit)
-      GITHUB_PAGES_DELAY: 3000
-    };
+  <!-- OUTPUT -->
+  <div class="panel">
+    <div class="header">
+      Ergebnis
+      <div class="sub">Analyse & Dashboard</div>
+    </div>
+    <div id="output" class="out">
+      <div class="card">Noch keine Anfrage.</div>
+    </div>
+  </div>
 
-    // ============================================================
-    // Marked.js konfigurieren
-    // ============================================================
-    marked.setOptions({ breaks: true, gfm: true, headerIds: false, mangle: false });
+</div>
 
-    // ============================================================
-    // DOM Elements
-    // ============================================================
-    const chatlog = document.getElementById('chatlog');
-    const output = document.getElementById('output');
-    const input = document.getElementById('input');
-    const sendBtn = document.getElementById('send');
+<script>
+const WEBHOOK_URL = "https://yraq0l4j.rpcld.cc/webhook/rfq-chat";
 
-    // Speichere die aktuelle Dashboard-URL
-    let currentDashboardUrl = null;
+const chatlog = document.getElementById("chatlog");
+const output = document.getElementById("output");
+const input = document.getElementById("input");
+const sendBtn = document.getElementById("send");
 
-    // ============================================================
-    // Chat Functions
-    // ============================================================
-    function addMsg(role, text, extraClass = '') {
-      const div = document.createElement('div');
-      div.className = `msg ${role} ${extraClass}`.trim();
-      div.innerHTML = text;
-      chatlog.appendChild(div);
-      chatlog.scrollTop = chatlog.scrollHeight;
-    }
+let chartInstances = {};
 
-    function showLoading() {
-      output.innerHTML = `
+function addMsg(role, text, cls="") {
+  const d = document.createElement("div");
+  d.className = `msg ${role} ${cls}`;
+  d.textContent = text;
+  chatlog.appendChild(d);
+  chatlog.scrollTop = chatlog.scrollHeight;
+}
+
+function showText(text) {
+  output.innerHTML = `<div class="card">${marked.parse(text)}</div>`;
+}
+
+function showDashboard(data) {
+  output.innerHTML = `
+    <div class="card">
+      <div class="tag">📊 Dashboard</div>
+      ${data.answer ? `<div>${marked.parse(data.answer)}</div>` : ""}
+      <div id="kpis"></div>
+      <div id="charts"></div>
+      <div id="table"></div>
+    </div>
+  `;
+
+  renderKpis(data.kpis || []);
+  renderCharts(data.charts || []);
+  renderTable(data.table);
+}
+
+function renderKpis(kpis) {
+  if (!kpis.length) return;
+  document.getElementById("kpis").innerHTML = `
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-top:12px;">
+      ${kpis.map(k => `
         <div class="card">
-          <div class="loading">
-            <div class="spinner"></div>
-            <span>Verarbeite Anfrage...</span>
-          </div>
+          <div style="font-size:12px;color:#666">${k.label}</div>
+          <div style="font-size:22px;font-weight:800">${k.value}</div>
         </div>
-      `;
-    }
+      `).join("")}
+    </div>
+  `;
+}
 
-    // ============================================================
-    // Output Display Functions
-    // ============================================================
-    function showTextAnswer(text) {
-      const htmlContent = marked.parse(text);
-      output.innerHTML = `
-        <div class="card">
-          <div class="tag">Antwort</div>
-          <div class="answer-content">${htmlContent}</div>
-        </div>
-      `;
-    }
+function renderCharts(charts) {
+  Object.values(chartInstances).forEach(c => c.destroy());
+  chartInstances = {};
 
-    function showDashboardInline(htmlContent, title = 'Dashboard') {
-      output.innerHTML = `
-        <div class="card">
-          <div class="tag dashboard">📊 ${escapeHtml(title)}</div>
-          <div class="dashboard-container">
-            <iframe srcdoc="${escapeHtml(htmlContent)}" sandbox="allow-scripts allow-same-origin"></iframe>
-          </div>
-        </div>
-      `;
-    }
+  const el = document.getElementById("charts");
+  if (!charts.length) return;
 
-    function showDashboardUrl(url, title = 'Dashboard') {
-      const cacheBustedUrl = url + (url.includes('?') ? '&' : '?') + 't=' + Date.now();
-      currentDashboardUrl = cacheBustedUrl;
+  el.innerHTML = charts.map((c,i)=>`
+    <div class="card">
+      <strong>${c.title || "Chart"}</strong>
+      <canvas id="chart_${i}"></canvas>
+    </div>
+  `).join("");
 
-      output.innerHTML = `
-        <div class="card">
-          <div class="tag dashboard">📊 ${escapeHtml(title)}</div>
-          <div class="dashboard-container">
-            <button class="refresh-btn" onclick="refreshDashboard()">🔄 Aktualisieren</button>
-            <iframe id="dashboard-iframe" src="${cacheBustedUrl}"></iframe>
-          </div>
-          <div class="github-note">
-            Dashboard URL: <a href="${url}" target="_blank" rel="noopener noreferrer">${url}</a>
-          </div>
-        </div>
-      `;
-    }
-
-    function showDashboardUrlWithDelay(url, title = 'Dashboard') {
-      output.innerHTML = `
-        <div class="card">
-          <div class="tag dashboard">📊 ${escapeHtml(title)}</div>
-          <div class="dashboard-container" style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 300px;">
-            <div class="loading">
-              <div class="spinner"></div>
-              <span>Dashboard wird auf GitHub Pages bereitgestellt...</span>
-            </div>
-            <p style="color: var(--text-muted); font-size: 12px; margin-top: 12px;">
-              Bitte warten, GitHub Pages wird aktualisiert...
-            </p>
-          </div>
-        </div>
-      `;
-
-      setTimeout(() => {
-        showDashboardUrl(url, title);
-      }, CONFIG.GITHUB_PAGES_DELAY);
-    }
-
-    // ============================================================
-    // Dashboard refresh Funktion (global)
-    // ============================================================
-    window.refreshDashboard = function() {
-      const iframe = document.getElementById('dashboard-iframe');
-      if (!iframe) return;
-
-      // ✅ Basis-URL robust bestimmen (falls currentDashboardUrl schon Query hat)
-      const base = (currentDashboardUrl || CONFIG.DASHBOARD_BASE_URL).split('?')[0];
-      const newUrl = base + '?t=' + Date.now();
-
-      iframe.src = newUrl;
-      currentDashboardUrl = newUrl;
-    };
-
-    function showError(message) {
-      output.innerHTML = `
-        <div class="card">
-          <div class="tag error">Fehler</div>
-          <div class="answer-content">${escapeHtml(message)}</div>
-        </div>
-      `;
-    }
-
-    // ============================================================
-    // Utility Functions
-    // ============================================================
-    function escapeHtml(str) {
-      if (!str) return '';
-      return String(str)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#039;');
-    }
-
-    // ✅ NEW: Robust JSON Parsing für n8n Responses
-    // Handles:
-    // 1) {"type":"dashboard", ...}
-    // 2) {"output":"{\"type\":\"dashboard\",...}"}  <-- your current case
-    function parseN8nResponse(rawText) {
-      if (!rawText || rawText.trim() === '') {
-        return { type: "text", answer: "Leere Antwort vom Server erhalten." };
-      }
-
-      // First parse attempt
-      try {
-        const parsed = JSON.parse(rawText);
-
-        // If n8n wraps the real payload inside "output" as string, unwrap it
-        if (parsed && typeof parsed === 'object' && typeof parsed.output === 'string') {
-          const inner = parsed.output.trim();
-
-          // Try parse inner directly
-          try {
-            return JSON.parse(inner);
-          } catch (e1) {
-            // Sometimes it's double-quoted; remove outer quotes and try again
-            const unquoted = inner.replace(/^"+|"+$/g, '');
-            try {
-              return JSON.parse(unquoted);
-            } catch (e2) {
-              // Fallback
-              return { type: "text", answer: inner };
-            }
-          }
+  charts.forEach((c,i)=>{
+    chartInstances[i] = new Chart(
+      document.getElementById(`chart_${i}`),
+      {
+        type: c.chartType || "bar",
+        data: {
+          labels: c.labels,
+          datasets: c.series.map(s => ({
+            label: s.name,
+            data: s.data
+          }))
         }
-
-        return parsed;
-      } catch (e) {
-        // Not JSON → treat as plain text
-        return { type: "text", answer: rawText };
       }
-    }
+    );
+  });
+}
 
-    // ============================================================
-    // n8n API Call
-    // ============================================================
-    async function callN8N(message) {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), CONFIG.TIMEOUT);
+function renderTable(table) {
+  if (!table || !table.rows) return;
+  document.getElementById("table").innerHTML = `
+    <div class="card">
+      <strong>Tabelle</strong>
+      <table>
+        <thead>
+          <tr>${table.columns.map(c=>`<th>${c}</th>`).join("")}</tr>
+        </thead>
+        <tbody>
+          ${table.rows.map(r=>`
+            <tr>${r.map(c=>`<td>${c}</td>`).join("")}</tr>
+          `).join("")}
+        </tbody>
+      </table>
+    </div>
+  `;
+}
 
-      try {
-        const response = await fetch(CONFIG.WEBHOOK_URL, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            message: message,
-            timestamp: new Date().toISOString()
-          }),
-          signal: controller.signal
-        });
+async function send() {
+  const msg = input.value.trim();
+  if (!msg) return;
+  input.value = "";
+  addMsg("user", msg);
+  sendBtn.disabled = true;
+  output.innerHTML = `<div class="card">⏳ Verarbeitung…</div>`;
 
-        clearTimeout(timeoutId);
-
-        const rawText = await response.text();
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status}: ${rawText || 'Keine Details'}`);
-        }
-
-        return parseN8nResponse(rawText);
-
-      } catch (error) {
-        clearTimeout(timeoutId);
-        if (error.name === 'AbortError') {
-          throw new Error('Timeout: Die Anfrage hat zu lange gedauert.');
-        }
-        throw error;
-      }
-    }
-
-    // ============================================================
-    // Main Send Handler
-    // ============================================================
-    async function onSend() {
-      const msg = input.value.trim();
-      if (!msg) return;
-
-      input.value = '';
-      sendBtn.disabled = true;
-      addMsg('user', escapeHtml(msg));
-      showLoading();
-
-      try {
-        const response = await callN8N(msg);
-
-        switch (response.type) {
-          case 'text':
-            addMsg('bot', 'Antwort erhalten ✓');
-            showTextAnswer(response.answer || 'Keine Antwort erhalten.');
-            break;
-
-          case 'dashboard':
-            if (response.html) {
-              addMsg('bot', `✅ Dashboard "${response.title || 'Dashboard'}" wurde erstellt`, 'success');
-              showDashboardInline(response.html, response.title);
-            } else if (response.url) {
-              addMsg('bot', `✅ Dashboard "${response.title || 'Dashboard'}" ist bereit`, 'success');
-              showDashboardUrlWithDelay(response.url, response.title);
-            } else {
-              throw new Error('Dashboard-Antwort enthält weder HTML noch URL');
-            }
-            break;
-
-          default: {
-            const fallbackText =
-              response.answer ||
-              response.text ||
-              response.output || // in case it still comes through
-              JSON.stringify(response, null, 2);
-
-            addMsg('bot', 'Antwort erhalten');
-            showTextAnswer(fallbackText);
-            break;
-          }
-        }
-
-      } catch (error) {
-        console.error('Error:', error);
-        addMsg('bot', `❌ ${escapeHtml(error.message)}`, 'error');
-        showError(error.message);
-      } finally {
-        sendBtn.disabled = false;
-        input.focus();
-      }
-    }
-
-    // ============================================================
-    // Event Listeners
-    // ============================================================
-    sendBtn.addEventListener('click', onSend);
-
-    input.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter' && !e.shiftKey) {
-        e.preventDefault();
-        onSend();
-      }
+  try {
+    const res = await fetch(WEBHOOK_URL,{
+      method:"POST",
+      headers:{ "Content-Type":"application/json" },
+      body:JSON.stringify({ message: msg })
     });
+    const data = await res.json();
 
-    input.focus();
-  </script>
+    if (data.type === "text") {
+      addMsg("bot","Antwort erhalten","success");
+      showText(data.answer || "");
+    } else if (data.type === "dashboard_update") {
+      addMsg("bot","Dashboard aktualisiert","success");
+      showDashboard(data);
+    } else {
+      showText(JSON.stringify(data,null,2));
+    }
+  } catch(e) {
+    addMsg("bot","Fehler","error");
+    showText(e.message);
+  } finally {
+    sendBtn.disabled = false;
+  }
+}
+
+sendBtn.onclick = send;
+input.addEventListener("keydown",e=>{
+  if(e.key==="Enter" && !e.shiftKey){ e.preventDefault(); send(); }
+});
+</script>
 </body>
 </html>
