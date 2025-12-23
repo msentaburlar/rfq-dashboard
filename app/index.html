@@ -1,1 +1,817 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Datenanalyse mit AI</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <style>
+    :root {
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      --primary: #2563eb;
+      --primary-hover: #1d4ed8;
+      --danger: #e74c3c;
+      --danger-hover: #cf3d30;
+      --bg: #f4f6f9;
+      --card-bg: #ffffff;
+      --border: #e9edf3;
+      --text: #1f2937;
+      --text-muted: #6b7280;
+    }
+
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--bg); color: var(--text); }
+
+    .app {
+      display: grid;
+      grid-template-columns: 420px 1fr;
+      height: 100vh;
+      gap: 16px;
+      padding: 16px;
+    }
+
+    @media (max-width: 900px) {
+      .app { grid-template-columns: 1fr; grid-template-rows: 1fr 1fr; }
+    }
+
+    .panel {
+      background: var(--card-bg);
+      border-radius: 14px;
+      box-shadow: 0 6px 18px rgba(0,0,0,.06);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .header {
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--border);
+      font-weight: 700;
+      background: var(--card-bg);
+    }
+
+    .sub {
+      font-weight: 500;
+      color: var(--text-muted);
+      font-size: 12px;
+      margin-top: 4px;
+    }
+
+    .chatlog { padding: 14px 16px; overflow: auto; flex: 1; }
+
+    .msg {
+      margin: 10px 0;
+      padding: 10px 14px;
+      border-radius: 12px;
+      max-width: 90%;
+      line-height: 1.45;
+      font-size: 14px;
+    }
+
+    .user { background: #e8f0ff; margin-left: auto; border-bottom-right-radius: 4px; }
+    .bot { background: #f3f4f6; border-bottom-left-radius: 4px; }
+    .bot.error { background: #fef2f2; color: #b91c1c; }
+    .bot.success { background: #f0fdf4; color: #166534; }
+
+    .composer {
+      padding: 12px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      gap: 10px;
+    }
+
+    textarea {
+      flex: 1;
+      resize: none;
+      border: 1px solid #d6dde8;
+      border-radius: 10px;
+      padding: 12px;
+      height: 48px;
+      outline: none;
+      font-family: inherit;
+      font-size: 14px;
+      transition: border-color 0.2s;
+    }
+
+    textarea:focus { border-color: var(--primary); }
+
+    button {
+      border: 0;
+      background: var(--primary);
+      color: white;
+      padding: 0 20px;
+      border-radius: 10px;
+      font-weight: 700;
+      cursor: pointer;
+      font-size: 14px;
+      transition: background 0.2s;
+      height: 48px;
+    }
+
+    button:hover:not(:disabled) { background: var(--primary-hover); }
+    button:disabled { opacity: 0.6; cursor: not-allowed; }
+
+    .out { padding: 14px 16px; overflow: auto; flex: 1; }
+
+    .card {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px;
+      margin: 10px 0;
+      background: var(--card-bg);
+    }
+
+    .tag {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 3px 10px;
+      border-radius: 999px;
+      background: #eef2ff;
+      color: #3730a3;
+      margin-bottom: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .tag.dashboard { background: #f0fdf4; color: #166534; }
+    .tag.error { background: #fef2f2; color: #b91c1c; }
+
+    .hint { color: var(--text-muted); font-size: 13px; }
+
+    .dashboard-container {
+      width: 100%;
+      min-height: 500px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: #fff;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .dashboard-container iframe {
+      width: 100%;
+      height: 75vh;
+      border: none;
+      border-radius: 12px;
+    }
+
+    .loading {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--text-muted);
+      font-size: 13px;
+    }
+
+    .spinner {
+      width: 16px;
+      height: 16px;
+      border: 2px solid var(--border);
+      border-top-color: var(--primary);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .answer-content { line-height: 1.7; font-size: 14px; }
+    .answer-content h1, .answer-content h2, .answer-content h3 { margin: 16px 0 8px 0; color: var(--text); font-weight: 600; }
+    .answer-content h2 { color: var(--primary); }
+    .answer-content table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 13px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); border-radius: 8px; overflow: hidden; }
+    .answer-content thead { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
+    .answer-content th { padding: 12px 14px; text-align: left; font-weight: 600; }
+    .answer-content td { padding: 10px 14px; border-bottom: 1px solid #eee; }
+    .answer-content tbody tr:hover { background: #f8fafc; }
+    .answer-content ul, .answer-content ol { margin: 12px 0; padding-left: 24px; }
+    .answer-content li { margin: 6px 0; }
+    .answer-content strong { color: var(--primary); }
+
+    .refresh-btn {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      cursor: pointer;
+      z-index: 10;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      height: auto;
+    }
+    .refresh-btn:hover { background: var(--primary-hover); }
+
+    .github-note {
+      font-size: 11px;
+      color: var(--text-muted);
+      text-align: center;
+      margin-top: 8px;
+    }
+    .github-note a { color: var(--primary); text-decoration: none; }
+
+    /* ✅ Dashboard-Filterbar: standardmäßig versteckt */
+    .dash-filterbar {
+      display: none;
+      gap: 14px;
+      align-items: flex-end;
+      flex-wrap: wrap;
+      padding: 12px 14px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: #fff;
+      margin: 10px 0;
+    }
+
+    .field { display: flex; flex-direction: column; gap: 6px; }
+    .label { font-size: 12px; color: var(--text-muted); font-weight: 800; }
+
+    select {
+      height: 40px;
+      border: 1px solid #d6dde8;
+      border-radius: 10px;
+      padding: 0 10px;
+      background: #fff;
+      font-weight: 700;
+      min-width: 160px;
+    }
+
+    .btnrow { display: flex; gap: 10px; align-items: center; margin-left: auto; }
+    .btn-apply { background: var(--primary); height: 40px; padding: 0 16px; border-radius: 10px; font-weight: 900; }
+    .btn-apply:hover { background: var(--primary-hover); }
+    .btn-reset { background: var(--danger); height: 40px; padding: 0 16px; border-radius: 10px; font-weight: 900; }
+    .btn-reset:hover { background: var(--danger-hover); }
+
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 10px;
+      margin-top: 12px;
+    }
+    .kpi {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px;
+      background: #fff;
+    }
+    .kpi .k { font-size: 12px; color: var(--text-muted); font-weight: 900; }
+    .kpi .v { font-size: 22px; font-weight: 950; margin-top: 6px; }
+
+    .chart-card {
+      margin-top: 14px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px;
+      background: #fff;
+    }
+    .chart-title { font-weight: 950; margin-bottom: 10px; }
+    .chart-wrap { height: 300px; }
+  </style>
+</head>
+
+<body>
+  <div class="app">
+    <!-- LEFT: CHAT -->
+    <div class="panel">
+      <div class="header">
+        Datenanalyse & Dashboard
+        <div class="sub">Frage eingeben – Analyse und Visualisierung erhalten</div>
+      </div>
+
+      <div id="chatlog" class="chatlog">
+        <div class="msg bot">
+          Hi! Frag z.B. „Gib mir die gesamte Anzahl …“ oder „Erstelle ein Dashboard …“.
+        </div>
+      </div>
+
+      <div class="composer">
+        <textarea id="input" placeholder="Schreibe deine Frage..."></textarea>
+        <button id="send">Senden</button>
+      </div>
+    </div>
+
+    <!-- RIGHT: OUTPUT -->
+    <div class="panel">
+      <div class="header">
+        Output
+        <div class="sub">Text oder Dashboard wird hier angezeigt</div>
+      </div>
+
+      <div id="output" class="out">
+        <div class="hint">Noch keine Antwort. Sende links eine Frage.</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const CONFIG = {
+      WEBHOOK_URL: "https://yraq0l4j.rpcld.cc/webhook/rfq-chat",
+      DASHBOARD_BASE_URL: "https://msentaburlar.github.io/rfq-dashboard/dashboard.html",
+      TIMEOUT: 120000,
+      GITHUB_PAGES_DELAY: 3000
+    };
+
+    marked.setOptions({ breaks: true, gfm: true, headerIds: false, mangle: false });
+
+    const chatlog = document.getElementById('chatlog');
+    const output = document.getElementById('output');
+    const input = document.getElementById('input');
+    const sendBtn = document.getElementById('send');
+
+    let currentDashboardUrl = null;
+
+    // ✅ Speichert die zuletzt gelieferten Basisdaten für lokales Filtern
+    let lastClientFilterPayload = null; // { data, meta, ... }
+    let chartInstance = null;
+
+    function addMsg(role, text, extraClass = '') {
+      const div = document.createElement('div');
+      div.className = `msg ${role} ${extraClass}`.trim();
+      div.innerHTML = text;
+      chatlog.appendChild(div);
+      chatlog.scrollTop = chatlog.scrollHeight;
+    }
+
+    function showLoading() {
+      output.innerHTML = `
+        <div class="card">
+          <div class="loading">
+            <div class="spinner"></div>
+            <span>Verarbeite Anfrage...</span>
+          </div>
+        </div>
+      `;
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    function showTextAnswer(text) {
+      const htmlContent = marked.parse(text || "");
+      output.innerHTML = `
+        <div class="card">
+          <div class="tag">Antwort</div>
+          <div class="answer-content">${htmlContent}</div>
+        </div>
+      `;
+    }
+
+    function showDashboardInline(htmlContent, title = 'Dashboard') {
+      output.innerHTML = `
+        <div class="card">
+          <div class="tag dashboard">📊 ${escapeHtml(title)}</div>
+          <div class="dashboard-container">
+            <iframe srcdoc="${escapeHtml(htmlContent)}" sandbox="allow-scripts allow-same-origin"></iframe>
+          </div>
+        </div>
+      `;
+    }
+
+    function showDashboardUrl(url, title = 'Dashboard') {
+      const cacheBustedUrl = url + (url.includes('?') ? '&' : '?') + 't=' + Date.now();
+      currentDashboardUrl = cacheBustedUrl;
+
+      output.innerHTML = `
+        <div class="card">
+          <div class="tag dashboard">📊 ${escapeHtml(title)}</div>
+          <div class="dashboard-container">
+            <button class="refresh-btn" onclick="refreshDashboard()">🔄 Aktualisieren</button>
+            <iframe id="dashboard-iframe" src="${cacheBustedUrl}"></iframe>
+          </div>
+          <div class="github-note">
+            Dashboard URL: <a href="${url}" target="_blank" rel="noopener noreferrer">${url}</a>
+          </div>
+        </div>
+      `;
+    }
+
+    function showDashboardUrlWithDelay(url, title = 'Dashboard') {
+      output.innerHTML = `
+        <div class="card">
+          <div class="tag dashboard">📊 ${escapeHtml(title)}</div>
+          <div class="dashboard-container" style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:300px;">
+            <div class="loading">
+              <div class="spinner"></div>
+              <span>Dashboard wird auf GitHub Pages bereitgestellt...</span>
+            </div>
+            <p style="color: var(--text-muted); font-size: 12px; margin-top: 12px;">
+              Bitte warten, GitHub Pages wird aktualisiert...
+            </p>
+          </div>
+        </div>
+      `;
+
+      setTimeout(() => showDashboardUrl(url, title), CONFIG.GITHUB_PAGES_DELAY);
+    }
+
+    window.refreshDashboard = function() {
+      const iframe = document.getElementById('dashboard-iframe');
+      if (!iframe) return;
+
+      const base = (currentDashboardUrl || CONFIG.DASHBOARD_BASE_URL).split('?')[0];
+      const newUrl = base + '?t=' + Date.now();
+      iframe.src = newUrl;
+      currentDashboardUrl = newUrl;
+    };
+
+    function showError(message) {
+      output.innerHTML = `
+        <div class="card">
+          <div class="tag error">Fehler</div>
+          <div class="answer-content">${escapeHtml(message)}</div>
+        </div>
+      `;
+    }
+
+    // ============================================================
+    // ✅ DASHBOARD_UPDATE + LOCAL FILTER (nur wenn explizit erlaubt)
+    // ============================================================
+
+    function showDashboardUpdateClientFilter(payload) {
+      // Reset Chart instance
+      if (chartInstance) { try { chartInstance.destroy(); } catch(e) {} }
+      chartInstance = null;
+
+      const title = payload.title || "Dashboard";
+      const answer = payload.answer || "";
+      const meta = payload.meta || {};
+      const filterFields = Array.isArray(payload.filterFields) ? payload.filterFields : [];
+
+      // Filterbar nur anzeigen, wenn explizit erlaubt
+      const enableFilters = payload.clientFilter === true && Array.isArray(payload.data) && payload.data.length > 0;
+
+      // Daten merken (für apply/reset)
+      lastClientFilterPayload = enableFilters ? {
+        data: payload.data,
+        meta,
+        filterFields
+      } : null;
+
+      output.innerHTML = `
+        <div class="card">
+          <div class="tag dashboard">📊 ${escapeHtml(title)}</div>
+          ${answer ? `<div class="answer-content">${marked.parse(answer)}</div>` : ""}
+
+          <div id="dashFilterBar" class="dash-filterbar"></div>
+
+          <div id="kpiGrid" class="kpi-grid"></div>
+
+          <div class="chart-card">
+            <div class="chart-title">${escapeHtml(meta.chartTitle || "Chart")}</div>
+            <div class="chart-wrap"><canvas id="mainChart"></canvas></div>
+          </div>
+
+          <div class="chart-card">
+            <div class="chart-title">${escapeHtml(meta.tableTitle || "Tabelle")}</div>
+            <div id="tableWrap"></div>
+          </div>
+        </div>
+      `;
+
+      // Render KPIs + Chart + Table initial (ungefiltert)
+      if (!enableFilters) {
+        // Kein clientFilter -> keine Filterbar, aber trotzdem Darstellung, falls möglich
+        renderClientFilterKpisAndViews(payload.data || [], meta, { year: null, month: null });
+        const bar = document.getElementById("dashFilterBar");
+        if (bar) bar.style.display = "none";
+        return;
+      }
+
+      // Render Filterbar
+      renderClientFilterBar(filterFields, payload.data);
+
+      // Default: keine Filter gesetzt
+      renderClientFilterKpisAndViews(payload.data, meta, { year: null, month: null });
+    }
+
+    function renderClientFilterBar(filterFields, data) {
+      const bar = document.getElementById("dashFilterBar");
+      if (!bar) return;
+
+      // Build options from data
+      const years = [...new Set(data.map(d => d.year).filter(v => v != null))].sort((a,b)=>a-b);
+      const months = [...new Set(data.map(d => d.month).filter(v => v != null))].sort((a,b)=>a-b);
+
+      const hasYear = filterFields.includes("year");
+      const hasMonth = filterFields.includes("month");
+
+      bar.style.display = "flex";
+      bar.innerHTML = `
+        ${hasYear ? `
+          <div class="field">
+            <div class="label">Jahr</div>
+            <select id="cfYear">
+              <option value="">Alle Jahre</option>
+              ${years.map(y => `<option value="${y}">${y}</option>`).join("")}
+            </select>
+          </div>
+        ` : ""}
+
+        ${hasMonth ? `
+          <div class="field">
+            <div class="label">Monat</div>
+            <select id="cfMonth" ${hasYear ? "disabled" : ""}>
+              <option value="">Alle Monate</option>
+              ${months.map(m => `<option value="${m}">${monthName(m)} (${m})</option>`).join("")}
+            </select>
+          </div>
+        ` : ""}
+
+        <div class="btnrow">
+          <button id="cfApply" class="btn-apply" title="Filtert nur lokal (keine DB-Abfrage)">Anwenden</button>
+          <button id="cfReset" class="btn-reset" title="Filter zurücksetzen (lokal)">Zurücksetzen</button>
+        </div>
+      `;
+
+      const yearSel = document.getElementById("cfYear");
+      const monthSel = document.getElementById("cfMonth");
+      const applyBtn = document.getElementById("cfApply");
+      const resetBtn = document.getElementById("cfReset");
+
+      // Monat nur aktiv, wenn Jahr gewählt (wie dein Wunsch)
+      if (yearSel && monthSel) {
+        yearSel.addEventListener("change", () => {
+          const y = yearSel.value ? Number(yearSel.value) : null;
+          monthSel.disabled = !y;
+          if (!y) monthSel.value = "";
+        });
+      }
+
+      applyBtn.addEventListener("click", () => {
+        if (!lastClientFilterPayload) return;
+        const y = yearSel ? (yearSel.value ? Number(yearSel.value) : null) : null;
+        const m = monthSel ? (monthSel.value ? Number(monthSel.value) : null) : null;
+        renderClientFilterKpisAndViews(lastClientFilterPayload.data, lastClientFilterPayload.meta, { year: y, month: m });
+      });
+
+      resetBtn.addEventListener("click", () => {
+        if (yearSel) yearSel.value = "";
+        if (monthSel) { monthSel.value = ""; monthSel.disabled = true; }
+        if (!lastClientFilterPayload) return;
+        renderClientFilterKpisAndViews(lastClientFilterPayload.data, lastClientFilterPayload.meta, { year: null, month: null });
+      });
+    }
+
+    function renderClientFilterKpisAndViews(allData, meta, filter) {
+      const filtered = allData.filter(d => {
+        if (filter.year != null && d.year !== filter.year) return false;
+        if (filter.month != null && d.month !== filter.month) return false;
+        return true;
+      });
+
+      // KPIs
+      const total = filtered.reduce((sum, d) => sum + (Number(d.value) || 0), 0);
+      const kpiGrid = document.getElementById("kpiGrid");
+      if (kpiGrid) {
+        kpiGrid.innerHTML = `
+          <div class="kpi"><div class="k">Gesamt</div><div class="v">${formatDE(total)}</div></div>
+          <div class="kpi"><div class="k">Zeitraum</div><div class="v">${formatFilterLabel(filter)}</div></div>
+          <div class="kpi"><div class="k">Einträge</div><div class="v">${filtered.length}</div></div>
+        `;
+      }
+
+      // Chart: Monatswerte (wenn year gewählt) sonst Jahreswerte aggregiert
+      const ctx = document.getElementById("mainChart");
+      if (!ctx) return;
+
+      if (chartInstance) { try { chartInstance.destroy(); } catch(e) {} }
+
+      let labels = [];
+      let values = [];
+      let chartTitle = meta.chartTitle || (meta.valueLabel ? meta.valueLabel : "Werte");
+
+      if (filter.year != null) {
+        // Monate im Jahr
+        const byMonth = new Map();
+        filtered.forEach(d => {
+          const m = d.month ?? 0;
+          byMonth.set(m, (byMonth.get(m) || 0) + (Number(d.value) || 0));
+        });
+        const months = [...byMonth.keys()].sort((a,b)=>a-b);
+        labels = months.map(m => monthName(m));
+        values = months.map(m => byMonth.get(m));
+        chartTitle = `${chartTitle} – ${filter.year}`;
+      } else {
+        // Jahre aggregieren
+        const byYear = new Map();
+        filtered.forEach(d => {
+          const y = d.year ?? 0;
+          byYear.set(y, (byYear.get(y) || 0) + (Number(d.value) || 0));
+        });
+        const years = [...byYear.keys()].sort((a,b)=>a-b);
+        labels = years.map(y => String(y));
+        values = years.map(y => byYear.get(y));
+      }
+
+      chartInstance = new Chart(ctx.getContext("2d"), {
+        type: "bar",
+        data: {
+          labels,
+          datasets: [{
+            label: meta.valueLabel || "Wert",
+            data: values
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false
+        }
+      });
+
+      // Table
+      const tableWrap = document.getElementById("tableWrap");
+      if (tableWrap) {
+        // sort
+        const rows = [...filtered].sort((a,b)=>{
+          if (a.year !== b.year) return a.year - b.year;
+          return (a.month||0) - (b.month||0);
+        });
+
+        tableWrap.innerHTML = `
+          <div class="answer-content" style="padding:0;">
+            <table style="width:100%;border-collapse:collapse;">
+              <thead style="background:#f3f4f6;">
+                <tr>
+                  <th style="text-align:left;padding:10px 12px;border-bottom:1px solid var(--border);">Jahr</th>
+                  <th style="text-align:left;padding:10px 12px;border-bottom:1px solid var(--border);">Monat</th>
+                  <th style="text-align:left;padding:10px 12px;border-bottom:1px solid var(--border);">${escapeHtml(meta.valueLabel || "Wert")}</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${rows.map(r => `
+                  <tr>
+                    <td style="padding:10px 12px;border-bottom:1px solid var(--border);">${escapeHtml(String(r.year ?? ""))}</td>
+                    <td style="padding:10px 12px;border-bottom:1px solid var(--border);">${escapeHtml(monthName(r.month))}</td>
+                    <td style="padding:10px 12px;border-bottom:1px solid var(--border);">${escapeHtml(formatDE(Number(r.value)||0))}</td>
+                  </tr>
+                `).join("")}
+              </tbody>
+            </table>
+          </div>
+        `;
+      }
+    }
+
+    function formatDE(n) {
+      try {
+        return new Intl.NumberFormat('de-DE').format(n);
+      } catch {
+        return String(n);
+      }
+    }
+
+    function monthName(m) {
+      const map = {
+        1:"Jan",2:"Feb",3:"Mär",4:"Apr",5:"Mai",6:"Jun",
+        7:"Jul",8:"Aug",9:"Sep",10:"Okt",11:"Nov",12:"Dez"
+      };
+      return map[m] || (m ? String(m) : "");
+    }
+
+    function formatFilterLabel(f) {
+      if (f.year == null) return "Alle Jahre";
+      if (f.month == null) return String(f.year);
+      return `${monthName(f.month)} ${f.year}`;
+    }
+
+    // ============================================================
+    // Robust JSON Parsing
+    // ============================================================
+    function parseN8nResponse(rawText) {
+      if (!rawText || rawText.trim() === '') {
+        return { type: "text", answer: "Leere Antwort vom Server erhalten." };
+      }
+
+      try {
+        const parsed = JSON.parse(rawText);
+
+        if (parsed && typeof parsed === 'object' && typeof parsed.output === 'string') {
+          const inner = parsed.output.trim();
+          try {
+            return JSON.parse(inner);
+          } catch {
+            const unquoted = inner.replace(/^"+|"+$/g, '');
+            try { return JSON.parse(unquoted); } catch { return { type: "text", answer: inner }; }
+          }
+        }
+        return parsed;
+
+      } catch {
+        return { type: "text", answer: rawText };
+      }
+    }
+
+    async function callN8N(message) {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), CONFIG.TIMEOUT);
+
+      try {
+        const response = await fetch(CONFIG.WEBHOOK_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            message: message,
+            timestamp: new Date().toISOString()
+          }),
+          signal: controller.signal
+        });
+
+        clearTimeout(timeoutId);
+
+        const rawText = await response.text();
+        if (!response.ok) throw new Error(`HTTP ${response.status}: ${rawText || 'Keine Details'}`);
+        return parseN8nResponse(rawText);
+
+      } catch (error) {
+        clearTimeout(timeoutId);
+        if (error.name === 'AbortError') throw new Error('Timeout: Die Anfrage hat zu lange gedauert.');
+        throw error;
+      }
+    }
+
+    async function onSend() {
+      const msg = input.value.trim();
+      if (!msg) return;
+
+      input.value = '';
+      sendBtn.disabled = true;
+      addMsg('user', escapeHtml(msg));
+      showLoading();
+
+      try {
+        const response = await callN8N(msg);
+
+        switch (response.type) {
+          case 'text':
+            addMsg('bot', 'Antwort erhalten ✓');
+            showTextAnswer(response.answer || 'Keine Antwort erhalten.');
+            break;
+
+          case 'dashboard':
+            if (response.html) {
+              addMsg('bot', `✅ Dashboard "${response.title || 'Dashboard'}" wurde erstellt`, 'success');
+              showDashboardInline(response.html, response.title);
+            } else if (response.url) {
+              addMsg('bot', `✅ Dashboard "${response.title || 'Dashboard'}" ist bereit`, 'success');
+              showDashboardUrlWithDelay(response.url, response.title);
+            } else {
+              throw new Error('Dashboard-Antwort enthält weder HTML noch URL');
+            }
+            break;
+
+          case 'dashboard_update':
+            // ✅ Lokale Filter nur wenn response.clientFilter === true & response.data existiert
+            addMsg('bot', 'Dashboard aktualisiert', 'success');
+            showDashboardUpdateClientFilter(response);
+            break;
+
+          default: {
+            const fallbackText =
+              response.answer ||
+              response.text ||
+              response.output ||
+              JSON.stringify(response, null, 2);
+
+            addMsg('bot', 'Antwort erhalten');
+            showTextAnswer(fallbackText);
+            break;
+          }
+        }
+
+      } catch (error) {
+        console.error('Error:', error);
+        addMsg('bot', `❌ ${escapeHtml(error.message)}`, 'error');
+        showError(error.message);
+      } finally {
+        sendBtn.disabled = false;
+        input.focus();
+      }
+    }
+
+    sendBtn.addEventListener('click', onSend);
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        onSend();
+      }
+    });
+
+    input.focus();
+  </script>
+</body>
+</html>
 
