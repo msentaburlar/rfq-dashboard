@@ -13,8 +13,6 @@
       font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
       --primary: #2563eb;
       --primary-hover: #1d4ed8;
-      --danger: #e74c3c;
-      --danger-hover: #cf3d30;
       --bg: #f4f6f9;
       --card-bg: #ffffff;
       --border: #e9edf3;
@@ -108,7 +106,6 @@
       cursor: pointer;
       font-size: 14px;
       transition: background 0.2s;
-      height: 48px;
     }
 
     button:hover:not(:disabled) { background: var(--primary-hover); }
@@ -190,6 +187,7 @@
     .answer-content li { margin: 6px 0; }
     .answer-content strong { color: var(--primary); }
 
+    /* Refresh Button für Dashboard */
     .refresh-btn {
       position: absolute;
       top: 10px;
@@ -205,89 +203,34 @@
       display: flex;
       align-items: center;
       gap: 4px;
-      height: auto;
     }
     .refresh-btn:hover { background: var(--primary-hover); }
 
+    /* GitHub Pages Hinweis */
     .github-note {
       font-size: 11px;
       color: var(--text-muted);
       text-align: center;
       margin-top: 8px;
     }
-    .github-note a { color: var(--primary); text-decoration: none; }
-
-    /* ✅ Dashboard-Filterbar: standardmäßig versteckt */
-    .dash-filterbar {
-      display: none;
-      gap: 14px;
-      align-items: flex-end;
-      flex-wrap: wrap;
-      padding: 12px 14px;
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      background: #fff;
-      margin: 10px 0;
+    .github-note a {
+      color: var(--primary);
+      text-decoration: none;
     }
-
-    .field { display: flex; flex-direction: column; gap: 6px; }
-    .label { font-size: 12px; color: var(--text-muted); font-weight: 800; }
-
-    select {
-      height: 40px;
-      border: 1px solid #d6dde8;
-      border-radius: 10px;
-      padding: 0 10px;
-      background: #fff;
-      font-weight: 700;
-      min-width: 160px;
-    }
-
-    .btnrow { display: flex; gap: 10px; align-items: center; margin-left: auto; }
-    .btn-apply { background: var(--primary); height: 40px; padding: 0 16px; border-radius: 10px; font-weight: 900; }
-    .btn-apply:hover { background: var(--primary-hover); }
-    .btn-reset { background: var(--danger); height: 40px; padding: 0 16px; border-radius: 10px; font-weight: 900; }
-    .btn-reset:hover { background: var(--danger-hover); }
-
-    .kpi-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-      gap: 10px;
-      margin-top: 12px;
-    }
-    .kpi {
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 12px;
-      background: #fff;
-    }
-    .kpi .k { font-size: 12px; color: var(--text-muted); font-weight: 900; }
-    .kpi .v { font-size: 22px; font-weight: 950; margin-top: 6px; }
-
-    .chart-card {
-      margin-top: 14px;
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 12px;
-      background: #fff;
-    }
-    .chart-title { font-weight: 950; margin-bottom: 10px; }
-    .chart-wrap { height: 300px; }
   </style>
 </head>
-
 <body>
   <div class="app">
     <!-- LEFT: CHAT -->
     <div class="panel">
       <div class="header">
-        Datenanalyse & Dashboard
-        <div class="sub">Frage eingeben – Analyse und Visualisierung erhalten</div>
+         Datenanalyse & Dashboard
+        <div class="sub"> Frage eingeben – Analyse und Visualisierung erhalten</div>
       </div>
 
       <div id="chatlog" class="chatlog">
         <div class="msg bot">
-          Hi! Frag z.B. „Gib mir die gesamte Anzahl …“ oder „Erstelle ein Dashboard …“.
+          Hi! Stell z.B. eine Frage oder bitte um ein Dashboard mit Diagramm und Tabelle.
         </div>
       </div>
 
@@ -311,6 +254,9 @@
   </div>
 
   <script>
+    // ============================================================
+    // KONFIGURATION
+    // ============================================================
     const CONFIG = {
       WEBHOOK_URL: "https://yraq0l4j.rpcld.cc/webhook/rfq-chat",
       DASHBOARD_BASE_URL: "https://msentaburlar.github.io/rfq-dashboard/dashboard.html",
@@ -318,19 +264,28 @@
       GITHUB_PAGES_DELAY: 3000
     };
 
+    // ============================================================
+    // Marked.js konfigurieren
+    // ============================================================
     marked.setOptions({ breaks: true, gfm: true, headerIds: false, mangle: false });
 
+    // ============================================================
+    // DOM Elements
+    // ============================================================
     const chatlog = document.getElementById('chatlog');
     const output = document.getElementById('output');
     const input = document.getElementById('input');
     const sendBtn = document.getElementById('send');
 
+    // Chart instances (Chart.js)
+    let chartInstances = {};
+
+    // Speichere die aktuelle Dashboard-URL (alte Logik)
     let currentDashboardUrl = null;
 
-    // ✅ Speichert die zuletzt gelieferten Basisdaten für lokales Filtern
-    let lastClientFilterPayload = null; // { data, meta, ... }
-    let chartInstance = null;
-
+    // ============================================================
+    // Chat Functions
+    // ============================================================
     function addMsg(role, text, extraClass = '') {
       const div = document.createElement('div');
       div.className = `msg ${role} ${extraClass}`.trim();
@@ -350,16 +305,9 @@
       `;
     }
 
-    function escapeHtml(str) {
-      if (!str) return '';
-      return String(str)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#039;');
-    }
-
+    // ============================================================
+    // Output Display Functions
+    // ============================================================
     function showTextAnswer(text) {
       const htmlContent = marked.parse(text || "");
       output.innerHTML = `
@@ -370,6 +318,120 @@
       `;
     }
 
+    // ============================================================
+    // NEW: Dashboard Update Rendering (KPIs + Charts + Table)
+    // ============================================================
+    function showDashboardUpdate(payload) {
+      const title = payload.title || "Dashboard";
+      const answer = payload.answer || "";
+
+      output.innerHTML = `
+        <div class="card">
+          <div class="tag dashboard">📊 ${escapeHtml(title)}</div>
+
+          ${answer ? `<div class="answer-content">${marked.parse(answer)}</div>` : ""}
+
+          <div id="kpi-grid"></div>
+          <div id="charts-area"></div>
+          <div id="table-area"></div>
+        </div>
+      `;
+
+      renderKpis(payload.kpis || []);
+      renderCharts(payload.charts || []);
+      renderTable(payload.table || null);
+    }
+
+    function renderKpis(kpis) {
+      const el = document.getElementById("kpi-grid");
+      if (!el) return;
+
+      if (!kpis.length) { el.innerHTML = ""; return; }
+
+      el.innerHTML = `
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin-top:12px;">
+          ${kpis.map(k => `
+            <div style="border:1px solid var(--border);border-radius:12px;padding:12px;background:#fff;">
+              <div style="font-size:12px;color:var(--text-muted);font-weight:600;">${escapeHtml(k.label || "")}</div>
+              <div style="font-size:20px;font-weight:800;margin-top:6px;">${escapeHtml(k.value || "")}</div>
+            </div>
+          `).join("")}
+        </div>
+      `;
+    }
+
+    function renderCharts(charts) {
+      const el = document.getElementById("charts-area");
+      if (!el) return;
+
+      // alte Charts zerstören
+      Object.values(chartInstances).forEach(ch => { try { ch.destroy(); } catch (e) {} });
+      chartInstances = {};
+
+      if (!charts.length) { el.innerHTML = ""; return; }
+
+      el.innerHTML = charts.map((c, idx) => {
+        const id = c.id || ("chart" + (idx+1));
+        return `
+          <div style="margin-top:14px;border:1px solid var(--border);border-radius:12px;padding:12px;background:#fff;">
+            <div style="font-weight:800;margin-bottom:10px;">${escapeHtml(c.title || ("Chart " + (idx+1)))}</div>
+            <div style="height:280px;">
+              <canvas id="${escapeHtml(id)}"></canvas>
+            </div>
+          </div>
+        `;
+      }).join("");
+
+      charts.forEach((c, idx) => {
+        const id = c.id || ("chart" + (idx+1));
+        const canvas = document.getElementById(id);
+        if (!canvas) return;
+
+        const chartType = (c.chartType || "bar").toLowerCase();
+        const labels = c.labels || [];
+        const series = c.series || [];
+
+        const datasets = series.map(s => ({
+          label: s.name || "Serie",
+          data: (s.data || []).map(v => (typeof v === "string" ? Number(v) : v))
+        }));
+
+        chartInstances[id] = new Chart(canvas.getContext("2d"), {
+          type: chartType,
+          data: { labels, datasets },
+          options: { responsive: true, maintainAspectRatio: false }
+        });
+      });
+    }
+
+    function renderTable(table) {
+      const el = document.getElementById("table-area");
+      if (!el) return;
+
+      if (!table || !table.columns || !table.rows) { el.innerHTML = ""; return; }
+
+      el.innerHTML = `
+        <div style="margin-top:14px;border:1px solid var(--border);border-radius:12px;overflow:hidden;background:#fff;">
+          <div style="padding:10px 12px;font-weight:800;border-bottom:1px solid var(--border);">Tabelle</div>
+          <div class="answer-content" style="padding:0;">
+            <table>
+              <thead>
+                <tr>${table.columns.map(col => `<th>${escapeHtml(col)}</th>`).join("")}</tr>
+              </thead>
+              <tbody>
+                ${table.rows.map(r => `
+                  <tr>${r.map(cell => `<td>${escapeHtml(String(cell))}</td>`).join("")}</tr>
+                `).join("")}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      `;
+    }
+
+    // ============================================================
+    // Alte Dashboard-Logik (html/url) bleibt drin, stört nicht
+    // ============================================================
     function showDashboardInline(htmlContent, title = 'Dashboard') {
       output.innerHTML = `
         <div class="card">
@@ -403,25 +465,26 @@
       output.innerHTML = `
         <div class="card">
           <div class="tag dashboard">📊 ${escapeHtml(title)}</div>
-          <div class="dashboard-container" style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:300px;">
+          <div class="dashboard-container" style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 300px;">
             <div class="loading">
               <div class="spinner"></div>
-              <span>Dashboard wird auf GitHub Pages bereitgestellt...</span>
+              <span>Dashboard wird bereitgestellt...</span>
             </div>
             <p style="color: var(--text-muted); font-size: 12px; margin-top: 12px;">
-              Bitte warten, GitHub Pages wird aktualisiert...
+              Bitte warten...
             </p>
           </div>
         </div>
       `;
 
-      setTimeout(() => showDashboardUrl(url, title), CONFIG.GITHUB_PAGES_DELAY);
+      setTimeout(() => {
+        showDashboardUrl(url, title);
+      }, CONFIG.GITHUB_PAGES_DELAY);
     }
 
     window.refreshDashboard = function() {
       const iframe = document.getElementById('dashboard-iframe');
       if (!iframe) return;
-
       const base = (currentDashboardUrl || CONFIG.DASHBOARD_BASE_URL).split('?')[0];
       const newUrl = base + '?t=' + Date.now();
       iframe.src = newUrl;
@@ -438,259 +501,19 @@
     }
 
     // ============================================================
-    // ✅ DASHBOARD_UPDATE + LOCAL FILTER (nur wenn explizit erlaubt)
+    // Utility Functions
     // ============================================================
-
-    function showDashboardUpdateClientFilter(payload) {
-      // Reset Chart instance
-      if (chartInstance) { try { chartInstance.destroy(); } catch(e) {} }
-      chartInstance = null;
-
-      const title = payload.title || "Dashboard";
-      const answer = payload.answer || "";
-      const meta = payload.meta || {};
-      const filterFields = Array.isArray(payload.filterFields) ? payload.filterFields : [];
-
-      // Filterbar nur anzeigen, wenn explizit erlaubt
-      const enableFilters = payload.clientFilter === true && Array.isArray(payload.data) && payload.data.length > 0;
-
-      // Daten merken (für apply/reset)
-      lastClientFilterPayload = enableFilters ? {
-        data: payload.data,
-        meta,
-        filterFields
-      } : null;
-
-      output.innerHTML = `
-        <div class="card">
-          <div class="tag dashboard">📊 ${escapeHtml(title)}</div>
-          ${answer ? `<div class="answer-content">${marked.parse(answer)}</div>` : ""}
-
-          <div id="dashFilterBar" class="dash-filterbar"></div>
-
-          <div id="kpiGrid" class="kpi-grid"></div>
-
-          <div class="chart-card">
-            <div class="chart-title">${escapeHtml(meta.chartTitle || "Chart")}</div>
-            <div class="chart-wrap"><canvas id="mainChart"></canvas></div>
-          </div>
-
-          <div class="chart-card">
-            <div class="chart-title">${escapeHtml(meta.tableTitle || "Tabelle")}</div>
-            <div id="tableWrap"></div>
-          </div>
-        </div>
-      `;
-
-      // Render KPIs + Chart + Table initial (ungefiltert)
-      if (!enableFilters) {
-        // Kein clientFilter -> keine Filterbar, aber trotzdem Darstellung, falls möglich
-        renderClientFilterKpisAndViews(payload.data || [], meta, { year: null, month: null });
-        const bar = document.getElementById("dashFilterBar");
-        if (bar) bar.style.display = "none";
-        return;
-      }
-
-      // Render Filterbar
-      renderClientFilterBar(filterFields, payload.data);
-
-      // Default: keine Filter gesetzt
-      renderClientFilterKpisAndViews(payload.data, meta, { year: null, month: null });
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
     }
 
-    function renderClientFilterBar(filterFields, data) {
-      const bar = document.getElementById("dashFilterBar");
-      if (!bar) return;
-
-      // Build options from data
-      const years = [...new Set(data.map(d => d.year).filter(v => v != null))].sort((a,b)=>a-b);
-      const months = [...new Set(data.map(d => d.month).filter(v => v != null))].sort((a,b)=>a-b);
-
-      const hasYear = filterFields.includes("year");
-      const hasMonth = filterFields.includes("month");
-
-      bar.style.display = "flex";
-      bar.innerHTML = `
-        ${hasYear ? `
-          <div class="field">
-            <div class="label">Jahr</div>
-            <select id="cfYear">
-              <option value="">Alle Jahre</option>
-              ${years.map(y => `<option value="${y}">${y}</option>`).join("")}
-            </select>
-          </div>
-        ` : ""}
-
-        ${hasMonth ? `
-          <div class="field">
-            <div class="label">Monat</div>
-            <select id="cfMonth" ${hasYear ? "disabled" : ""}>
-              <option value="">Alle Monate</option>
-              ${months.map(m => `<option value="${m}">${monthName(m)} (${m})</option>`).join("")}
-            </select>
-          </div>
-        ` : ""}
-
-        <div class="btnrow">
-          <button id="cfApply" class="btn-apply" title="Filtert nur lokal (keine DB-Abfrage)">Anwenden</button>
-          <button id="cfReset" class="btn-reset" title="Filter zurücksetzen (lokal)">Zurücksetzen</button>
-        </div>
-      `;
-
-      const yearSel = document.getElementById("cfYear");
-      const monthSel = document.getElementById("cfMonth");
-      const applyBtn = document.getElementById("cfApply");
-      const resetBtn = document.getElementById("cfReset");
-
-      // Monat nur aktiv, wenn Jahr gewählt (wie dein Wunsch)
-      if (yearSel && monthSel) {
-        yearSel.addEventListener("change", () => {
-          const y = yearSel.value ? Number(yearSel.value) : null;
-          monthSel.disabled = !y;
-          if (!y) monthSel.value = "";
-        });
-      }
-
-      applyBtn.addEventListener("click", () => {
-        if (!lastClientFilterPayload) return;
-        const y = yearSel ? (yearSel.value ? Number(yearSel.value) : null) : null;
-        const m = monthSel ? (monthSel.value ? Number(monthSel.value) : null) : null;
-        renderClientFilterKpisAndViews(lastClientFilterPayload.data, lastClientFilterPayload.meta, { year: y, month: m });
-      });
-
-      resetBtn.addEventListener("click", () => {
-        if (yearSel) yearSel.value = "";
-        if (monthSel) { monthSel.value = ""; monthSel.disabled = true; }
-        if (!lastClientFilterPayload) return;
-        renderClientFilterKpisAndViews(lastClientFilterPayload.data, lastClientFilterPayload.meta, { year: null, month: null });
-      });
-    }
-
-    function renderClientFilterKpisAndViews(allData, meta, filter) {
-      const filtered = allData.filter(d => {
-        if (filter.year != null && d.year !== filter.year) return false;
-        if (filter.month != null && d.month !== filter.month) return false;
-        return true;
-      });
-
-      // KPIs
-      const total = filtered.reduce((sum, d) => sum + (Number(d.value) || 0), 0);
-      const kpiGrid = document.getElementById("kpiGrid");
-      if (kpiGrid) {
-        kpiGrid.innerHTML = `
-          <div class="kpi"><div class="k">Gesamt</div><div class="v">${formatDE(total)}</div></div>
-          <div class="kpi"><div class="k">Zeitraum</div><div class="v">${formatFilterLabel(filter)}</div></div>
-          <div class="kpi"><div class="k">Einträge</div><div class="v">${filtered.length}</div></div>
-        `;
-      }
-
-      // Chart: Monatswerte (wenn year gewählt) sonst Jahreswerte aggregiert
-      const ctx = document.getElementById("mainChart");
-      if (!ctx) return;
-
-      if (chartInstance) { try { chartInstance.destroy(); } catch(e) {} }
-
-      let labels = [];
-      let values = [];
-      let chartTitle = meta.chartTitle || (meta.valueLabel ? meta.valueLabel : "Werte");
-
-      if (filter.year != null) {
-        // Monate im Jahr
-        const byMonth = new Map();
-        filtered.forEach(d => {
-          const m = d.month ?? 0;
-          byMonth.set(m, (byMonth.get(m) || 0) + (Number(d.value) || 0));
-        });
-        const months = [...byMonth.keys()].sort((a,b)=>a-b);
-        labels = months.map(m => monthName(m));
-        values = months.map(m => byMonth.get(m));
-        chartTitle = `${chartTitle} – ${filter.year}`;
-      } else {
-        // Jahre aggregieren
-        const byYear = new Map();
-        filtered.forEach(d => {
-          const y = d.year ?? 0;
-          byYear.set(y, (byYear.get(y) || 0) + (Number(d.value) || 0));
-        });
-        const years = [...byYear.keys()].sort((a,b)=>a-b);
-        labels = years.map(y => String(y));
-        values = years.map(y => byYear.get(y));
-      }
-
-      chartInstance = new Chart(ctx.getContext("2d"), {
-        type: "bar",
-        data: {
-          labels,
-          datasets: [{
-            label: meta.valueLabel || "Wert",
-            data: values
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false
-        }
-      });
-
-      // Table
-      const tableWrap = document.getElementById("tableWrap");
-      if (tableWrap) {
-        // sort
-        const rows = [...filtered].sort((a,b)=>{
-          if (a.year !== b.year) return a.year - b.year;
-          return (a.month||0) - (b.month||0);
-        });
-
-        tableWrap.innerHTML = `
-          <div class="answer-content" style="padding:0;">
-            <table style="width:100%;border-collapse:collapse;">
-              <thead style="background:#f3f4f6;">
-                <tr>
-                  <th style="text-align:left;padding:10px 12px;border-bottom:1px solid var(--border);">Jahr</th>
-                  <th style="text-align:left;padding:10px 12px;border-bottom:1px solid var(--border);">Monat</th>
-                  <th style="text-align:left;padding:10px 12px;border-bottom:1px solid var(--border);">${escapeHtml(meta.valueLabel || "Wert")}</th>
-                </tr>
-              </thead>
-              <tbody>
-                ${rows.map(r => `
-                  <tr>
-                    <td style="padding:10px 12px;border-bottom:1px solid var(--border);">${escapeHtml(String(r.year ?? ""))}</td>
-                    <td style="padding:10px 12px;border-bottom:1px solid var(--border);">${escapeHtml(monthName(r.month))}</td>
-                    <td style="padding:10px 12px;border-bottom:1px solid var(--border);">${escapeHtml(formatDE(Number(r.value)||0))}</td>
-                  </tr>
-                `).join("")}
-              </tbody>
-            </table>
-          </div>
-        `;
-      }
-    }
-
-    function formatDE(n) {
-      try {
-        return new Intl.NumberFormat('de-DE').format(n);
-      } catch {
-        return String(n);
-      }
-    }
-
-    function monthName(m) {
-      const map = {
-        1:"Jan",2:"Feb",3:"Mär",4:"Apr",5:"Mai",6:"Jun",
-        7:"Jul",8:"Aug",9:"Sep",10:"Okt",11:"Nov",12:"Dez"
-      };
-      return map[m] || (m ? String(m) : "");
-    }
-
-    function formatFilterLabel(f) {
-      if (f.year == null) return "Alle Jahre";
-      if (f.month == null) return String(f.year);
-      return `${monthName(f.month)} ${f.year}`;
-    }
-
-    // ============================================================
     // Robust JSON Parsing
-    // ============================================================
     function parseN8nResponse(rawText) {
       if (!rawText || rawText.trim() === '') {
         return { type: "text", answer: "Leere Antwort vom Server erhalten." };
@@ -699,22 +522,24 @@
       try {
         const parsed = JSON.parse(rawText);
 
+        // If wrapped inside "output" string
         if (parsed && typeof parsed === 'object' && typeof parsed.output === 'string') {
           const inner = parsed.output.trim();
-          try {
-            return JSON.parse(inner);
-          } catch {
-            const unquoted = inner.replace(/^"+|"+$/g, '');
-            try { return JSON.parse(unquoted); } catch { return { type: "text", answer: inner }; }
-          }
+          try { return JSON.parse(inner); } catch (e1) {}
+          const unquoted = inner.replace(/^"+|"+$/g, '');
+          try { return JSON.parse(unquoted); } catch (e2) {}
+          return { type: "text", answer: inner };
         }
-        return parsed;
 
-      } catch {
+        return parsed;
+      } catch (e) {
         return { type: "text", answer: rawText };
       }
     }
 
+    // ============================================================
+    // n8n API Call
+    // ============================================================
     async function callN8N(message) {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), CONFIG.TIMEOUT);
@@ -733,16 +558,24 @@
         clearTimeout(timeoutId);
 
         const rawText = await response.text();
-        if (!response.ok) throw new Error(`HTTP ${response.status}: ${rawText || 'Keine Details'}`);
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${rawText || 'Keine Details'}`);
+        }
+
         return parseN8nResponse(rawText);
 
       } catch (error) {
         clearTimeout(timeoutId);
-        if (error.name === 'AbortError') throw new Error('Timeout: Die Anfrage hat zu lange gedauert.');
+        if (error.name === 'AbortError') {
+          throw new Error('Timeout: Die Anfrage hat zu lange gedauert.');
+        }
         throw error;
       }
     }
 
+    // ============================================================
+    // Main Send Handler
+    // ============================================================
     async function onSend() {
       const msg = input.value.trim();
       if (!msg) return;
@@ -761,7 +594,12 @@
             showTextAnswer(response.answer || 'Keine Antwort erhalten.');
             break;
 
-          case 'dashboard':
+          case 'dashboard_update':
+            addMsg('bot', '✅ Dashboard aktualisiert', 'success');
+            showDashboardUpdate(response);
+            break;
+
+          case 'dashboard': // alte Logik optional
             if (response.html) {
               addMsg('bot', `✅ Dashboard "${response.title || 'Dashboard'}" wurde erstellt`, 'success');
               showDashboardInline(response.html, response.title);
@@ -771,12 +609,6 @@
             } else {
               throw new Error('Dashboard-Antwort enthält weder HTML noch URL');
             }
-            break;
-
-          case 'dashboard_update':
-            // ✅ Lokale Filter nur wenn response.clientFilter === true & response.data existiert
-            addMsg('bot', 'Dashboard aktualisiert', 'success');
-            showDashboardUpdateClientFilter(response);
             break;
 
           default: {
@@ -802,7 +634,11 @@
       }
     }
 
+    // ============================================================
+    // Event Listeners
+    // ============================================================
     sendBtn.addEventListener('click', onSend);
+
     input.addEventListener('keydown', (e) => {
       if (e.key === 'Enter' && !e.shiftKey) {
         e.preventDefault();
@@ -814,4 +650,3 @@
   </script>
 </body>
 </html>
-
