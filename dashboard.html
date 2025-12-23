@@ -1,1 +1,511 @@
-<!DOCTYPE html><html lang="de"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Datenmodell Visualisierung</title><script src="https://cdn.tailwindcss.com"></script><style>*{margin:0;padding:0;box-sizing:border-box}.table-card{transition:all 0.3s ease;cursor:pointer}.table-card:hover{transform:scale(1.02);box-shadow:0 10px 40px rgba(0,0,0,0.2)}.field-row:hover{background:rgba(99,102,241,0.1)}.connection-line{stroke-dasharray:5,5;animation:dash 20s linear infinite}@keyframes dash{to{stroke-dashoffset:-1000}}.legend-item{display:flex;align-items:center;gap:8px;font-size:12px}.color-box{width:12px;height:12px;border-radius:2px}</style></head><body class="bg-gray-900 text-white min-h-screen"><div class="container mx-auto px-4 py-8"><header class="mb-8"><h1 class="text-3xl font-bold text-center bg-gradient-to-r from-indigo-400 to-purple-500 bg-clip-text text-transparent">📊 Datenmodell Übersicht</h1><p class="text-center text-gray-400 mt-2">Interaktive Visualisierung aller Tabellen und Felder</p></header><div class="flex flex-wrap gap-4 mb-6 justify-center"><div class="legend-item"><div class="color-box bg-indigo-500"></div><span>Supplier Management</span></div><div class="legend-item"><div class="color-box bg-emerald-500"></div><span>RFX/Ausschreibungen</span></div><div class="legend-item"><div class="color-box bg-amber-500"></div><span>Stammdaten</span></div><div class="legend-item"><div class="color-box bg-rose-500"></div><span>Audit/DSM</span></div><div class="legend-item"><div class="color-box bg-cyan-500"></div><span>User/Rollen</span></div></div><div class="mb-6 flex justify-center"><input type="text" id="searchInput" placeholder="🔍 Tabelle oder Feld suchen..." class="w-full max-w-md px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white"></div><div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4" id="tablesContainer"></div><div id="detailModal" class="fixed inset-0 bg-black/80 hidden items-center justify-center z-50 p-4"><div class="bg-gray-800 rounded-xl max-w-2xl w-full max-h-[80vh] overflow-hidden"><div class="p-4 border-b border-gray-700 flex justify-between items-center"><h2 id="modalTitle" class="text-xl font-bold text-indigo-400"></h2><button onclick="closeModal()" class="text-gray-400 hover:text-white text-2xl">&times;</button></div><div class="p-4 overflow-y-auto max-h-[60vh]" id="modalContent"></div></div></div></div><script>const schema={"jd_supplier":{category:"supplier",color:"indigo",fields:["supplier_id","name_1","name_2","city","country","status","vendor_number","created","blocked","currency"]},"jd_supplier_category":{category:"supplier",color:"indigo",fields:["supplier_id","category_id","company_id","primary_category"]},"jd_supplier_users":{category:"supplier",color:"indigo",fields:["supplier_users_id","supplier_id","user_id","first_name","last_name","language","position"]},"jd_supplier_contracts":{category:"supplier",color:"indigo",fields:["contract_id","supplier_id","material_id","label","status","price","start_date","end_date"]},"jd_supplier_activities":{category:"supplier",color:"indigo",fields:["supplier_activity_id","supplier_id","contact","purpose","status","begin_date"]},"jd_rfx":{category:"rfx",color:"emerald",fields:["rfx_id","company_id","rfq_status","rfq_dead_line","currency","created","rfx_short_description"]},"jd_rfx_item":{category:"rfx",color:"emerald",fields:["rfx_item_id","rfx_id","material_id","quantity","unit","target_price","delivery_date"]},"jd_rfx_response":{category:"rfx",color:"emerald",fields:["rfx_response_id","rfx_id","supplier_id","status","total_cost","sent_date"]},"jd_rfx_response_item":{category:"rfx",color:"emerald",fields:["rfx_response_item_id","rfx_id","rfx_item_id","supplier_id","quotation_price","quantity"]},"jd_rfx_invited_suppliers":{category:"rfx",color:"emerald",fields:["rfx_cp_view_id","rfx_id","supplier_id","status","sent_date"]},"jd_company":{category:"master",color:"amber",fields:["company_id","company_name1","city","country","currency","email","homepage"]},"jd_category":{category:"master",color:"amber",fields:["category_id","company_id","name_eng","external_number","production_material"]},"jd_material":{category:"master",color:"amber",fields:["material_id","company_id","category_id","eng_name","code_number","unit","target_price"]},"jd_plant":{category:"master",color:"amber",fields:["plant_id","plant_name","company_id"]},"jd_purchasing_organization":{category:"master",color:"amber",fields:["purchasing_organization_id","company_id","name","currency"]},"dsm_td_audit_planning":{category:"audit",color:"rose",fields:["id","supplier_id","td_audit_status","td_audit_type","td_audit_date","td_vendor_name","td_country"]},"dsm_td_audit_planning_measure":{category:"audit",color:"rose",fields:["id","supplier_id","td_measure_status","td_measure_description","td_target_date"]},"dsm_td_set_results":{category:"audit",color:"rose",fields:["id","supplier_id","td_result","td_classification","td_quarter"]},"jd_user":{category:"user",color:"cyan",fields:["user_id","company_id","loginname","first_name","last_name","email","language"]},"jd_user_roles":{category:"user",color:"cyan",fields:["user_roles_id","user_roles_name","company_id"]},"jd_user_roles_map":{category:"user",color:"cyan",fields:["user_id","user_roles_id"]}};const relationships=[{from:"jd_supplier",to:"jd_supplier_category",field:"supplier_id"},{from:"jd_supplier",to:"jd_supplier_users",field:"supplier_id"},{from:"jd_supplier",to:"jd_supplier_contracts",field:"supplier_id"},{from:"jd_supplier",to:"jd_rfx_response",field:"supplier_id"},{from:"jd_rfx",to:"jd_rfx_item",field:"rfx_id"},{from:"jd_rfx",to:"jd_rfx_response",field:"rfx_id"},{from:"jd_rfx",to:"jd_rfx_invited_suppliers",field:"rfx_id"},{from:"jd_category",to:"jd_material",field:"category_id"},{from:"jd_company",to:"jd_user",field:"company_id"},{from:"jd_user",to:"jd_user_roles_map",field:"user_id"},{from:"jd_supplier",to:"dsm_td_audit_planning",field:"supplier_id"}];function getColorClass(color){const colors={indigo:"from-indigo-600 to-indigo-800 border-indigo-500",emerald:"from-emerald-600 to-emerald-800 border-emerald-500",amber:"from-amber-600 to-amber-800 border-amber-500",rose:"from-rose-600 to-rose-800 border-rose-500",cyan:"from-cyan-600 to-cyan-800 border-cyan-500"};return colors[color]||colors.indigo}function getIconForCategory(cat){const icons={supplier:"👥",rfx:"📋",master:"📁",audit:"✅",user:"👤"};return icons[cat]||"📊"}function renderTables(filter=""){const container=document.getElementById("tablesContainer");container.innerHTML="";Object.entries(schema).filter(([name,data])=>{const searchTerm=filter.toLowerCase();return name.toLowerCase().includes(searchTerm)||data.fields.some(f=>f.toLowerCase().includes(searchTerm))}).forEach(([name,data])=>{const card=document.createElement("div");card.className=`table-card bg-gradient-to-br ${getColorClass(data.color)} border-l-4 rounded-lg p-4`;card.innerHTML=`<div class="flex items-center gap-2 mb-3"><span class="text-2xl">${getIconForCategory(data.category)}</span><h3 class="font-bold text-sm truncate" title="${name}">${name}</h3></div><div class="text-xs text-gray-200 space-y-1">${data.fields.slice(0,5).map(f=>`<div class="field-row px-2 py-1 rounded ${f.includes('_id')?'bg-white/10 font-semibold':''}">${f.includes('_id')?'🔑 ':''} ${f}</div>`).join("")}</div>${data.fields.length>5?`<div class="text-xs text-gray-300 mt-2 text-center">+${data.fields.length-5} weitere Felder</div>`:""}<button onclick="showDetail('${name}')" class="mt-3 w-full text-xs bg-white/20 hover:bg-white/30 py-1 rounded transition">Details anzeigen</button>`;container.appendChild(card)})}function showDetail(tableName){const data=schema[tableName];const modal=document.getElementById("detailModal");const title=document.getElementById("modalTitle");const content=document.getElementById("modalContent");title.textContent=`${getIconForCategory(data.category)} ${tableName}`;const rels=relationships.filter(r=>r.from===tableName||r.to===tableName);content.innerHTML=`<div class="mb-4"><h4 class="font-semibold text-gray-300 mb-2">Felder (${data.fields.length})</h4><div class="grid grid-cols-2 gap-2">${data.fields.map(f=>`<div class="text-sm px-2 py-1 bg-gray-700 rounded ${f.includes('_id')?'border-l-2 border-indigo-400':''}">${f.includes('_id')?'🔑 ':''}${f}</div>`).join("")}</div></div>${rels.length>0?`<div class="mt-4"><h4 class="font-semibold text-gray-300 mb-2">Beziehungen</h4><div class="space-y-2">${rels.map(r=>`<div class="text-sm px-3 py-2 bg-gray-700 rounded flex items-center gap-2"><span class="${r.from===tableName?'text-emerald-400':'text-indigo-400'}">${r.from}</span><span class="text-gray-500">→</span><span class="${r.to===tableName?'text-emerald-400':'text-indigo-400'}">${r.to}</span><span class="text-gray-500 text-xs">(${r.field})</span></div>`).join("")}</div></div>`:""}<div class="mt-4 p-3 bg-gray-700/50 rounded"><p class="text-xs text-gray-400">Kategorie: <span class="text-white capitalize">${data.category}</span></p></div>`;modal.classList.remove("hidden");modal.classList.add("flex")}function closeModal(){document.getElementById("detailModal").classList.add("hidden");document.getElementById("detailModal").classList.remove("flex")}document.getElementById("searchInput").addEventListener("input",(e)=>{renderTables(e.target.value)});document.getElementById("detailModal").addEventListener("click",(e)=>{if(e.target.id==="detailModal")closeModal()});renderTables();</script></body></html>
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RFQ Dashboard - Werke, Buyer Groups & Lieferanten</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #fff;
+        }
+        .dashboard-header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+        }
+        .dashboard-header h1 {
+            font-size: 2.2rem;
+            background: linear-gradient(90deg, #00d2ff, #3a7bd5);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+        }
+        .dashboard-header p {
+            color: #aaa;
+            font-size: 1rem;
+        }
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 25px;
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+        .chart-container {
+            background: rgba(255,255,255,0.05);
+            border-radius: 15px;
+            padding: 25px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .chart-container h2 {
+            color: #00d2ff;
+            margin-bottom: 20px;
+            font-size: 1.3rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .chart-container h2::before {
+            content: '';
+            width: 4px;
+            height: 24px;
+            background: linear-gradient(180deg, #00d2ff, #3a7bd5);
+            border-radius: 2px;
+        }
+        .chart-wrapper {
+            position: relative;
+            height: 400px;
+        }
+        .chart-wrapper-large {
+            position: relative;
+            height: 500px;
+        }
+        .two-col {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+        }
+        .table-container {
+            margin-top: 20px;
+            overflow-x: auto;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+        }
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        th {
+            background: rgba(0,210,255,0.2);
+            color: #00d2ff;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            letter-spacing: 0.5px;
+        }
+        tr:hover {
+            background: rgba(255,255,255,0.05);
+        }
+        td {
+            color: #ddd;
+        }
+        .total-row {
+            background: rgba(0,210,255,0.1);
+            font-weight: 600;
+        }
+        .total-row td {
+            color: #00d2ff;
+        }
+        @media (max-width: 1200px) {
+            .two-col {
+                grid-template-columns: 1fr;
+            }
+        }
+        .kpi-row {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+        .kpi-card {
+            background: rgba(255,255,255,0.05);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .kpi-value {
+            font-size: 2rem;
+            font-weight: 700;
+            background: linear-gradient(90deg, #00d2ff, #3a7bd5);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .kpi-label {
+            color: #aaa;
+            font-size: 0.85rem;
+            margin-top: 5px;
+        }
+        @media (max-width: 768px) {
+            .kpi-row {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-header">
+        <h1>📊 RFQ Dashboard</h1>
+        <p>Anfragen pro Werk, Top Buyer Groups & Top Lieferanten | Zeitraum: 2020-2024</p>
+    </div>
+
+    <div class="kpi-row">
+        <div class="kpi-card">
+            <div class="kpi-value">37.753</div>
+            <div class="kpi-label">Gesamt RFQs (2020-2024)</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-value">40+</div>
+            <div class="kpi-label">Aktive Werke</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-value">5</div>
+            <div class="kpi-label">Top Buyer Groups</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-value">5</div>
+            <div class="kpi-label">Top Lieferanten</div>
+        </div>
+    </div>
+
+    <div class="dashboard-grid">
+        <!-- Stacked Bar Chart: RFQs pro Jahr und Werk -->
+        <div class="chart-container">
+            <h2>RFQs pro Jahr nach Werk (Top 10 Werke - Gestackt)</h2>
+            <div class="chart-wrapper-large">
+                <canvas id="werkStackedChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Tabelle: RFQ Anzahl pro Werk -->
+        <div class="chart-container">
+            <h2>RFQ Anzahl pro Werk (Top 20)</h2>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Rang</th>
+                            <th>Werk</th>
+                            <th>2020</th>
+                            <th>2021</th>
+                            <th>2022</th>
+                            <th>2023</th>
+                            <th>2024</th>
+                            <th>Gesamt</th>
+                        </tr>
+                    </thead>
+                    <tbody id="werkTable">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="two-col">
+            <!-- Top 5 Buyer Groups -->
+            <div class="chart-container">
+                <h2>Top 5 Buyer Groups (Alle Jahre)</h2>
+                <div class="chart-wrapper">
+                    <canvas id="buyerGroupChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Top 5 Lieferanten -->
+            <div class="chart-container">
+                <h2>Top 5 Lieferanten (Alle Jahre)</h2>
+                <div class="chart-wrapper">
+                    <canvas id="supplierChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Buyer Groups über Jahre -->
+        <div class="chart-container">
+            <h2>Top 5 Buyer Groups - Verteilung über Jahre</h2>
+            <div class="chart-wrapper">
+                <canvas id="buyerYearChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Lieferanten über Jahre -->
+        <div class="chart-container">
+            <h2>Top 5 Lieferanten - Verteilung über Jahre</h2>
+            <div class="chart-wrapper">
+                <canvas id="supplierYearChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Farben
+        const colors = [
+            'rgba(0, 210, 255, 0.8)',
+            'rgba(58, 123, 213, 0.8)',
+            'rgba(76, 175, 80, 0.8)',
+            'rgba(255, 152, 0, 0.8)',
+            'rgba(233, 30, 99, 0.8)',
+            'rgba(156, 39, 176, 0.8)',
+            'rgba(0, 188, 212, 0.8)',
+            'rgba(255, 87, 34, 0.8)',
+            'rgba(63, 81, 181, 0.8)',
+            'rgba(139, 195, 74, 0.8)'
+        ];
+
+        // Daten
+        const werkDaten = {
+            'Liebherr-Mining Equipment Colmar SAS': {2020: 1290, 2021: 1887, 2022: 1775, 2023: 1513, 2024: 440},
+            'Liebherr-Components Biberach GmbH': {2020: 106, 2021: 2144, 2022: 2297, 2023: 1297, 2024: 346},
+            'Liebherr-Hydraulikbagger GmbH': {2020: 89, 2021: 1786, 2022: 1597, 2023: 1562, 2024: 411},
+            'Liebherr-France SAS': {2020: 522, 2021: 1112, 2022: 1068, 2023: 938, 2024: 306},
+            'Liebherr-Werk Telfs GmbH': {2020: 113, 2021: 648, 2022: 528, 2023: 599, 2024: 209},
+            'Liebherr-Werk Biberach GmbH': {2020: 0, 2021: 0, 2022: 836, 2023: 689, 2024: 89},
+            'Liebherr-Verzahntechnik GmbH': {2020: 11, 2021: 373, 2022: 586, 2023: 495, 2024: 136},
+            'Liebherr Mining Equipment Co.': {2020: 0, 2021: 533, 2022: 534, 2023: 409, 2024: 113},
+            'Liebherr-Werk Bischofshofen GmbH': {2020: 44, 2021: 469, 2022: 426, 2023: 397, 2024: 177},
+            'Liebherr-Werk Nenzing GmbH': {2020: 0, 2021: 0, 2022: 18, 2023: 790, 2024: 266}
+        };
+
+        const werkGesamt = [
+            ['Liebherr-Mining Equipment Colmar SAS', 6905],
+            ['Liebherr-Components Biberach GmbH', 6190],
+            ['Liebherr-Hydraulikbagger GmbH', 5445],
+            ['Liebherr-France SAS', 3946],
+            ['Liebherr-Werk Telfs GmbH', 2097],
+            ['Liebherr-Werk Biberach GmbH', 1614],
+            ['Liebherr-Verzahntechnik GmbH', 1601],
+            ['Liebherr Mining Equipment Co.', 1589],
+            ['Liebherr-Werk Bischofshofen GmbH', 1513],
+            ['Liebherr-Werk Nenzing GmbH', 1074],
+            ['Liebherr-Components Colmar SAS', 776],
+            ['Liebherr-Mischtechnik GmbH', 750],
+            ['Liebherr-MCCtec Rostock GmbH', 740],
+            ['Liebherr-Components Kirchdorf GmbH', 715],
+            ['Liebherr-Werk Ehingen GmbH', 408],
+            ['Liebherr Purchasing (Dalian) Co. Ltd.', 406],
+            ['Liebherr Machines Bulle SA', 340],
+            ['Liebherr-Purchasing Services GmbH', 282],
+            ['Liebherr Components (Dalian) CO. LTD.', 180],
+            ['Liebherr-Components Deggendorf GmbH', 172]
+        ];
+
+        const topBuyers = [
+            ['Jutz Andrea (LHB)', 2770],
+            ['Buob Emilie (LEC)', 2255],
+            ['Marcot Sophie (LEC)', 2177],
+            ['Kreuzer Audrey (LFR)', 919],
+            ['Bootz Bernard (LEC)', 822]
+        ];
+
+        const topSuppliers = [
+            ['Siegfried Dannowski GmbH & Co.', 1920],
+            ['Eidam Landtechnik GmbH', 1851],
+            ['Wolfgang Stephan Blechverarbeitung', 1662],
+            ['Metabu Metallbau Burzlaff GmbH', 1558],
+            ['Würth Industrie Service GmbH', 1382]
+        ];
+
+        const buyerPerYear = {
+            'Jutz Andrea (LHB)': {2020: 39, 2021: 789, 2022: 896, 2023: 840, 2024: 206},
+            'Buob Emilie (LEC)': {2020: 400, 2021: 715, 2022: 614, 2023: 523, 2024: 3},
+            'Marcot Sophie (LEC)': {2020: 434, 2021: 622, 2022: 652, 2023: 469, 2024: 0},
+            'Kreuzer Audrey (LFR)': {2020: 36, 2021: 305, 2022: 295, 2023: 264, 2024: 19},
+            'Bootz Bernard (LEC)': {2020: 156, 2021: 213, 2022: 158, 2023: 218, 2024: 77}
+        };
+
+        const supplierPerYear = {
+            'Siegfried Dannowski': {2020: 35, 2021: 519, 2022: 598, 2023: 589, 2024: 179},
+            'Eidam Landtechnik': {2020: 60, 2021: 507, 2022: 661, 2023: 574, 2024: 49},
+            'Wolfgang Stephan': {2020: 19, 2021: 453, 2022: 531, 2023: 508, 2024: 151},
+            'Metabu Metallbau': {2020: 23, 2021: 401, 2022: 528, 2023: 498, 2024: 108},
+            'Würth Industrie': {2020: 62, 2021: 385, 2022: 475, 2023: 334, 2024: 126}
+        };
+
+        const years = ['2020', '2021', '2022', '2023', '2024'];
+
+        // Stacked Bar Chart für Werke
+        const werkNames = Object.keys(werkDaten);
+        const werkDatasets = werkNames.map((werk, idx) => ({
+            label: werk.replace('Liebherr-', '').replace(' GmbH', '').replace(' SAS', ''),
+            data: years.map(y => werkDaten[werk][y] || 0),
+            backgroundColor: colors[idx],
+            borderColor: colors[idx].replace('0.8', '1'),
+            borderWidth: 1
+        }));
+
+        new Chart(document.getElementById('werkStackedChart'), {
+            type: 'bar',
+            data: {
+                labels: years,
+                datasets: werkDatasets
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: {
+                        stacked: true,
+                        grid: { color: 'rgba(255,255,255,0.1)' },
+                        ticks: { color: '#aaa' }
+                    },
+                    y: {
+                        stacked: true,
+                        grid: { color: 'rgba(255,255,255,0.1)' },
+                        ticks: { color: '#aaa' }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        position: 'right',
+                        labels: { color: '#ddd', font: { size: 10 }, boxWidth: 12 }
+                    }
+                }
+            }
+        });
+
+        // Tabelle befüllen
+        const tableBody = document.getElementById('werkTable');
+        werkGesamt.forEach((row, idx) => {
+            const werk = row[0];
+            const gesamt = row[1];
+            const data2020 = werkDaten[werk]?.['2020'] || 0;
+            const data2021 = werkDaten[werk]?.['2021'] || 0;
+            const data2022 = werkDaten[werk]?.['2022'] || 0;
+            const data2023 = werkDaten[werk]?.['2023'] || 0;
+            const data2024 = werkDaten[werk]?.['2024'] || 0;
+            tableBody.innerHTML += `
+                <tr>
+                    <td>${idx + 1}</td>
+                    <td>${werk}</td>
+                    <td>${data2020.toLocaleString('de-DE')}</td>
+                    <td>${data2021.toLocaleString('de-DE')}</td>
+                    <td>${data2022.toLocaleString('de-DE')}</td>
+                    <td>${data2023.toLocaleString('de-DE')}</td>
+                    <td>${data2024.toLocaleString('de-DE')}</td>
+                    <td><strong>${gesamt.toLocaleString('de-DE')}</strong></td>
+                </tr>
+            `;
+        });
+
+        // Top 5 Buyer Groups
+        new Chart(document.getElementById('buyerGroupChart'), {
+            type: 'bar',
+            data: {
+                labels: topBuyers.map(b => b[0]),
+                datasets: [{
+                    label: 'Anzahl RFQs',
+                    data: topBuyers.map(b => b[1]),
+                    backgroundColor: colors.slice(0, 5),
+                    borderRadius: 8
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                indexAxis: 'y',
+                scales: {
+                    x: { grid: { color: 'rgba(255,255,255,0.1)' }, ticks: { color: '#aaa' } },
+                    y: { grid: { display: false }, ticks: { color: '#ddd' } }
+                },
+                plugins: { legend: { display: false } }
+            }
+        });
+
+        // Top 5 Lieferanten
+        new Chart(document.getElementById('supplierChart'), {
+            type: 'bar',
+            data: {
+                labels: topSuppliers.map(s => s[0]),
+                datasets: [{
+                    label: 'Anzahl RFQs',
+                    data: topSuppliers.map(s => s[1]),
+                    backgroundColor: colors.slice(5, 10).concat(colors.slice(0, 5)),
+                    borderRadius: 8
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                indexAxis: 'y',
+                scales: {
+                    x: { grid: { color: 'rgba(255,255,255,0.1)' }, ticks: { color: '#aaa' } },
+                    y: { grid: { display: false }, ticks: { color: '#ddd' } }
+                },
+                plugins: { legend: { display: false } }
+            }
+        });
+
+        // Buyer Groups über Jahre
+        const buyerYearDatasets = Object.keys(buyerPerYear).map((buyer, idx) => ({
+            label: buyer,
+            data: years.map(y => buyerPerYear[buyer][y] || 0),
+            backgroundColor: colors[idx],
+            borderColor: colors[idx].replace('0.8', '1'),
+            borderWidth: 2,
+            tension: 0.3,
+            fill: false
+        }));
+
+        new Chart(document.getElementById('buyerYearChart'), {
+            type: 'line',
+            data: {
+                labels: years,
+                datasets: buyerYearDatasets
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: { grid: { color: 'rgba(255,255,255,0.1)' }, ticks: { color: '#aaa' } },
+                    y: { grid: { color: 'rgba(255,255,255,0.1)' }, ticks: { color: '#aaa' } }
+                },
+                plugins: {
+                    legend: {
+                        position: 'top',
+                        labels: { color: '#ddd', usePointStyle: true }
+                    }
+                }
+            }
+        });
+
+        // Lieferanten über Jahre
+        const supplierYearDatasets = Object.keys(supplierPerYear).map((supplier, idx) => ({
+            label: supplier,
+            data: years.map(y => supplierPerYear[supplier][y] || 0),
+            backgroundColor: colors[idx + 5] || colors[idx],
+            borderColor: (colors[idx + 5] || colors[idx]).replace('0.8', '1'),
+            borderWidth: 2,
+            tension: 0.3,
+            fill: false
+        }));
+
+        new Chart(document.getElementById('supplierYearChart'), {
+            type: 'line',
+            data: {
+                labels: years,
+                datasets: supplierYearDatasets
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: { grid: { color: 'rgba(255,255,255,0.1)' }, ticks: { color: '#aaa' } },
+                    y: { grid: { color: 'rgba(255,255,255,0.1)' }, ticks: { color: '#aaa' } }
+                },
+                plugins: {
+                    legend: {
+                        position: 'top',
+                        labels: { color: '#ddd', usePointStyle: true }
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>
