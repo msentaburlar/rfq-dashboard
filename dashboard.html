@@ -1,343 +1,244 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RFQ Dashboard</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-            min-height: 100vh;
-            padding: 20px;
-            color: #fff;
-        }
-        .dashboard-header {
-            text-align: center;
-            margin-bottom: 30px;
-        }
-        .dashboard-header h1 {
-            font-size: 2.5rem;
-            background: linear-gradient(90deg, #00d4ff, #7b2cbf);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-        .dashboard-header p {
-            color: #a0a0a0;
-            margin-top: 10px;
-        }
-        .kpi-container {
-            display: flex;
-            justify-content: center;
-            gap: 30px;
-            margin-bottom: 30px;
-            flex-wrap: wrap;
-        }
-        .kpi-card {
-            background: rgba(255,255,255,0.05);
-            border-radius: 15px;
-            padding: 25px 40px;
-            text-align: center;
-            border: 1px solid rgba(255,255,255,0.1);
-            backdrop-filter: blur(10px);
-            transition: transform 0.3s ease;
-        }
-        .kpi-card:hover {
-            transform: translateY(-5px);
-        }
-        .kpi-value {
-            font-size: 2.5rem;
-            font-weight: bold;
-            background: linear-gradient(90deg, #00d4ff, #7b2cbf);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-        .kpi-label {
-            color: #a0a0a0;
-            margin-top: 5px;
-            font-size: 0.9rem;
-        }
-        .charts-container {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
-            gap: 25px;
-            max-width: 1600px;
-            margin: 0 auto;
-        }
-        .chart-card {
-            background: rgba(255,255,255,0.05);
-            border-radius: 20px;
-            padding: 25px;
-            border: 1px solid rgba(255,255,255,0.1);
-            backdrop-filter: blur(10px);
-        }
-        .chart-card h3 {
-            margin-bottom: 20px;
-            color: #fff;
-            font-size: 1.2rem;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        .chart-card h3::before {
-            content: '';
-            display: inline-block;
-            width: 4px;
-            height: 20px;
-            background: linear-gradient(180deg, #00d4ff, #7b2cbf);
-            border-radius: 2px;
-        }
-        .chart-wrapper {
-            position: relative;
-            height: 350px;
-        }
-        .full-width {
-            grid-column: 1 / -1;
-        }
-        @media (max-width: 768px) {
-            .charts-container {
-                grid-template-columns: 1fr;
-            }
-            .kpi-container {
-                flex-direction: column;
-                align-items: center;
-            }
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RFQ-Dashboard 2020–2024</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f5f7fa;color:#333;padding:20px;line-height:1.6}
+.container{max-width:1400px;margin:0 auto}
+h1{text-align:center;color:#2c3e50;margin-bottom:20px;font-size:1.8rem}
+.filter-section{background:#fff;padding:20px;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,0.1);margin-bottom:20px;display:flex;gap:15px;align-items:center;flex-wrap:wrap}
+.filter-section label{font-weight:600;color:#555}
+.filter-section select{padding:10px 15px;border:2px solid #ddd;border-radius:8px;font-size:1rem;min-width:150px;cursor:pointer}
+.filter-section select:disabled{background:#f0f0f0;cursor:not-allowed;color:#999}
+.btn-execute{background:#3498db;color:#fff;font-weight:700;padding:10px 20px;border:none;border-radius:8px;cursor:pointer;font-size:1rem;transition:background 0.2s}
+.btn-execute:hover{background:#2980b9}
+.btn-reset{background:#e74c3c;color:#fff;font-weight:700;padding:10px 20px;border:none;border-radius:8px;cursor:pointer;font-size:1rem;transition:background 0.2s}
+.btn-reset:hover{background:#c0392b}
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px;margin-bottom:20px}
+.kpi-card{background:#fff;border-radius:12px;padding:25px;box-shadow:0 2px 8px rgba(0,0,0,0.1);text-align:center;border-top:4px solid}
+.kpi-card.blue{border-color:#3498db}
+.kpi-card.orange{border-color:#f39c12}
+.kpi-card.split{border-color:#9b59b6}
+.kpi-label{font-size:0.9rem;color:#777;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px}
+.kpi-value{font-size:2.5rem;font-weight:700;color:#2c3e50}
+.kpi-sublabel{font-size:0.85rem;color:#999;margin-top:5px}
+.split-container{display:flex;justify-content:space-around;align-items:center;margin-bottom:15px}
+.split-item{text-align:center}
+.split-item .label{font-size:0.8rem;color:#777;margin-bottom:5px}
+.split-item .value{font-size:1.8rem;font-weight:700}
+.split-item .value.green{color:#2ecc71}
+.split-item .value.red{color:#e74c3c}
+.split-vs{font-size:1.2rem;color:#bbb;font-weight:700}
+.diff-row{display:flex;justify-content:space-around;padding-top:15px;border-top:1px solid #eee}
+.diff-item{text-align:center}
+.diff-item .label{font-size:0.75rem;color:#999}
+.diff-item .value{font-size:1.1rem;font-weight:600}
+.charts-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(400px,1fr));gap:20px;margin-bottom:20px}
+.chart-card{background:#fff;border-radius:12px;padding:20px;box-shadow:0 2px 8px rgba(0,0,0,0.1)}
+.chart-title{font-size:1.1rem;font-weight:600;color:#2c3e50;margin-bottom:15px;text-align:center}
+.chart-container{width:100%;height:300px;position:relative}
+.chart-container svg{width:100%;height:100%}
+.combo-section{background:#fff;border-radius:12px;padding:20px;box-shadow:0 2px 8px rgba(0,0,0,0.1);margin-bottom:20px}
+.combo-chart{height:350px}
+.placeholder{display:flex;align-items:center;justify-content:center;height:100%;color:#999;font-size:1.1rem;text-align:center}
+.legend{display:flex;justify-content:center;gap:30px;margin-top:15px;font-size:0.85rem}
+.legend-item{display:flex;align-items:center;gap:8px}
+.legend-color{width:20px;height:12px;border-radius:3px}
+.table-section{background:#fff;border-radius:12px;padding:20px;box-shadow:0 2px 8px rgba(0,0,0,0.1);margin-bottom:20px;overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:0.9rem}
+th,td{padding:12px 15px;text-align:center;border-bottom:1px solid #eee}
+th{background:#f8f9fa;color:#555;font-weight:600;text-transform:uppercase;font-size:0.8rem;letter-spacing:0.5px}
+tr:hover{background:#fafafa}
+tr.highlight{background:#f0f7ff}
+.diff-positive{color:#2ecc71;font-weight:600}
+.diff-negative{color:#e74c3c;font-weight:600}
+.status-box{background:#f8f9fa;border-radius:8px;padding:15px 20px;text-align:center;color:#555;font-size:0.95rem}
+@media(max-width:768px){.filter-section{flex-direction:column;align-items:stretch}.filter-section select,.btn-execute,.btn-reset{width:100%}.charts-grid{grid-template-columns:1fr}.kpi-grid{grid-template-columns:1fr}}
+</style>
 </head>
 <body>
-    <div class="dashboard-header">
-        <h1>📊 RFQ Dashboard</h1>
-        <p>Request for Quotations - Übersicht und Analyse</p>
-    </div>
-
-    <div class="kpi-container">
-        <div class="kpi-card">
-            <div class="kpi-value">37.348</div>
-            <div class="kpi-label">Gesamt RFQs</div>
-        </div>
-        <div class="kpi-card">
-            <div class="kpi-value">30.233</div>
-            <div class="kpi-label">Abgeschlossen</div>
-        </div>
-        <div class="kpi-card">
-            <div class="kpi-value">443</div>
-            <div class="kpi-label">Laufend</div>
-        </div>
-        <div class="kpi-card">
-            <div class="kpi-value">81%</div>
-            <div class="kpi-label">Abschlussrate</div>
-        </div>
-    </div>
-
-    <div class="charts-container">
-        <div class="chart-card">
-            <h3>RFQs nach Status</h3>
-            <div class="chart-wrapper">
-                <canvas id="statusChart"></canvas>
-            </div>
-        </div>
-
-        <div class="chart-card">
-            <h3>RFQs nach Einkaufsorganisation</h3>
-            <div class="chart-wrapper">
-                <canvas id="orgChart"></canvas>
-            </div>
-        </div>
-
-        <div class="chart-card full-width">
-            <h3>RFQs pro Monat (letzte 12 Monate)</h3>
-            <div class="chart-wrapper">
-                <canvas id="monthlyChart"></canvas>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        // Farbpalette
-        const colors = {
-            primary: 'rgba(0, 212, 255, 0.8)',
-            secondary: 'rgba(123, 44, 191, 0.8)',
-            success: 'rgba(46, 213, 115, 0.8)',
-            warning: 'rgba(255, 193, 7, 0.8)',
-            danger: 'rgba(255, 71, 87, 0.8)',
-            info: 'rgba(70, 130, 180, 0.8)',
-            gradient: ['rgba(0, 212, 255, 0.8)', 'rgba(123, 44, 191, 0.8)', 'rgba(46, 213, 115, 0.8)', 'rgba(255, 193, 7, 0.8)', 'rgba(255, 71, 87, 0.8)', 'rgba(70, 130, 180, 0.8)']
-        };
-
-        // Status Chart
-        const statusCtx = document.getElementById('statusChart').getContext('2d');
-        new Chart(statusCtx, {
-            type: 'bar',
-            data: {
-                labels: ['Abgeschlossen', 'In Prüfung', 'Abgebrochen', 'Geplant', 'Laufend', 'Genehmigt'],
-                datasets: [{
-                    label: 'Anzahl RFQs',
-                    data: [30233, 3097, 2987, 560, 443, 28],
-                    backgroundColor: [
-                        colors.success,
-                        colors.primary,
-                        colors.danger,
-                        colors.warning,
-                        colors.secondary,
-                        colors.info
-                    ],
-                    borderColor: [
-                        'rgba(46, 213, 115, 1)',
-                        'rgba(0, 212, 255, 1)',
-                        'rgba(255, 71, 87, 1)',
-                        'rgba(255, 193, 7, 1)',
-                        'rgba(123, 44, 191, 1)',
-                        'rgba(70, 130, 180, 1)'
-                    ],
-                    borderWidth: 2,
-                    borderRadius: 8
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        display: false
-                    }
-                },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        grid: {
-                            color: 'rgba(255,255,255,0.1)'
-                        },
-                        ticks: {
-                            color: '#a0a0a0'
-                        }
-                    },
-                    x: {
-                        grid: {
-                            display: false
-                        },
-                        ticks: {
-                            color: '#a0a0a0'
-                        }
-                    }
-                }
-            }
-        });
-
-        // Organization Chart
-        const orgCtx = document.getElementById('orgChart').getContext('2d');
-        new Chart(orgCtx, {
-            type: 'bar',
-            data: {
-                labels: ['EMtec', 'Mining', 'Components', 'MCCtec', 'Biberach', 'Verzahntechnik', 'Mischtechnik', 'International', 'Ehingen', 'Aerospace'],
-                datasets: [{
-                    label: 'Anzahl RFQs',
-                    data: [13176, 8494, 8490, 1863, 1653, 1601, 764, 689, 408, 123],
-                    backgroundColor: function(context) {
-                        const chart = context.chart;
-                        const {ctx, chartArea} = chart;
-                        if (!chartArea) return colors.primary;
-                        const gradient = ctx.createLinearGradient(0, chartArea.bottom, 0, chartArea.top);
-                        gradient.addColorStop(0, 'rgba(0, 212, 255, 0.6)');
-                        gradient.addColorStop(1, 'rgba(123, 44, 191, 0.8)');
-                        return gradient;
-                    },
-                    borderColor: 'rgba(0, 212, 255, 1)',
-                    borderWidth: 1,
-                    borderRadius: 8
-                }]
-            },
-            options: {
-                indexAxis: 'y',
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        display: false
-                    }
-                },
-                scales: {
-                    x: {
-                        beginAtZero: true,
-                        grid: {
-                            color: 'rgba(255,255,255,0.1)'
-                        },
-                        ticks: {
-                            color: '#a0a0a0'
-                        }
-                    },
-                    y: {
-                        grid: {
-                            display: false
-                        },
-                        ticks: {
-                            color: '#a0a0a0'
-                        }
-                    }
-                }
-            }
-        });
-
-        // Monthly Chart
-        const monthlyCtx = document.getElementById('monthlyChart').getContext('2d');
-        new Chart(monthlyCtx, {
-            type: 'bar',
-            data: {
-                labels: ['Mai 23', 'Jun 23', 'Jul 23', 'Aug 23', 'Sep 23', 'Okt 23', 'Nov 23', 'Dez 23', 'Jan 24', 'Feb 24', 'Mär 24', 'Apr 24'],
-                datasets: [{
-                    label: 'Anzahl RFQs',
-                    data: [1027, 1030, 1072, 694, 947, 962, 1014, 747, 958, 1068, 1050, 188],
-                    backgroundColor: function(context) {
-                        const chart = context.chart;
-                        const {ctx, chartArea} = chart;
-                        if (!chartArea) return colors.primary;
-                        const gradient = ctx.createLinearGradient(0, chartArea.bottom, 0, chartArea.top);
-                        gradient.addColorStop(0, 'rgba(0, 212, 255, 0.4)');
-                        gradient.addColorStop(1, 'rgba(0, 212, 255, 0.9)');
-                        return gradient;
-                    },
-                    borderColor: 'rgba(0, 212, 255, 1)',
-                    borderWidth: 2,
-                    borderRadius: 10
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        display: false
-                    }
-                },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        grid: {
-                            color: 'rgba(255,255,255,0.1)'
-                        },
-                        ticks: {
-                            color: '#a0a0a0'
-                        }
-                    },
-                    x: {
-                        grid: {
-                            display: false
-                        },
-                        ticks: {
-                            color: '#a0a0a0'
-                        }
-                    }
-                }
-            }
-        });
-    </script>
+<div class="container">
+<h1>📊 RFQ-Dashboard 2020–2024</h1>
+<div class="filter-section">
+<label>Jahr:</label>
+<select id="yearFilter">
+<option value="">Alle Jahre</option>
+<option value="2020">2020</option>
+<option value="2021">2021</option>
+<option value="2022">2022</option>
+<option value="2023">2023</option>
+<option value="2024">2024</option>
+</select>
+<label>Monat:</label>
+<select id="monthFilter" disabled>
+<option value="">Alle Monate</option>
+<option value="1">Januar</option>
+<option value="2">Februar</option>
+<option value="3">März</option>
+<option value="4">April</option>
+<option value="5">Mai</option>
+<option value="6">Juni</option>
+<option value="7">Juli</option>
+<option value="8">August</option>
+<option value="9">September</option>
+<option value="10">Oktober</option>
+<option value="11">November</option>
+<option value="12">Dezember</option>
+</select>
+<button class="btn-execute" id="btnExecute">🔍 Ausführen</button>
+<button class="btn-reset" id="btnReset">↻ Zurücksetzen</button>
+</div>
+<div class="kpi-grid">
+<div class="kpi-card blue">
+<div class="kpi-label">RFQs Gesamt</div>
+<div class="kpi-value" id="kpiTotal">37.348</div>
+<div class="kpi-sublabel" id="kpiTotalLabel">Alle Jahre</div>
+</div>
+<div class="kpi-card split">
+<div class="kpi-label">Jahresvergleich</div>
+<div class="split-container">
+<div class="split-item"><div class="label" id="currentLabel">2024</div><div class="value green" id="currentValue">3.264</div></div>
+<div class="split-vs">vs.</div>
+<div class="split-item"><div class="label" id="prevLabel">2023</div><div class="value red" id="prevValue">10.945</div></div>
+</div>
+<div class="diff-row">
+<div class="diff-item"><div class="label">Absolut</div><div class="value" id="diffAbs">−7.681 RFQs</div></div>
+<div class="diff-item"><div class="label">Prozentual</div><div class="value" id="diffPct">−70,2%</div></div>
+</div>
+</div>
+<div class="kpi-card orange">
+<div class="kpi-label">Aktive Lieferanten</div>
+<div class="kpi-value">2.221</div>
+<div class="kpi-sublabel">Registrierte Partner</div>
+</div>
+</div>
+<div class="charts-grid">
+<div class="chart-card">
+<div class="chart-title" id="barTitle">RFQs pro Jahr</div>
+<div class="chart-container" id="barChart"></div>
+</div>
+<div class="chart-card">
+<div class="chart-title" id="pieTitle">Verteilung nach Jahr</div>
+<div class="chart-container" id="pieChart"></div>
+</div>
+</div>
+<div class="combo-section">
+<div class="chart-title" id="comboTitle">Monatlicher Vergleich</div>
+<div class="chart-container combo-chart" id="comboChart">
+<div class="placeholder">📅 Wählen Sie ein Jahr und klicken Sie 'Ausführen'</div>
+</div>
+<div class="legend" id="comboLegend" style="display:none">
+<div class="legend-item"><div class="legend-color" style="background:#2ecc71"></div><span id="legendCurrent">2024 (Balken)</span></div>
+<div class="legend-item"><div class="legend-color" style="background:#e74c3c"></div><span id="legendPrev">2023 (Linie)</span></div>
+</div>
+</div>
+<div class="table-section">
+<table>
+<thead>
+<tr><th>Monat</th><th id="thCurrent">2024 🟢</th><th id="thPrev">2023 🔴</th><th>Differenz</th></tr>
+</thead>
+<tbody id="tableBody"></tbody>
+</table>
+</div>
+<div class="status-box" id="statusBox">📊 Zeige: Alle Daten (37.348 RFQs)</div>
+</div>
+<script>
+const DATA={2020:[0,0,17,34,16,37,199,306,224,284,358,430,435],2021:[0,599,758,909,878,817,824,977,639,896,911,871,741],2022:[0,743,1115,1166,798,947,991,1074,629,894,951,897,774],2023:[0,799,817,1020,816,1027,1030,1072,694,947,962,1014,747],2024:[0,958,1068,1050,188,0,0,0,0,0,0,0,0]};
+const YEARLY={2020:2340,2021:9820,2022:10979,2023:10945,2024:3264};
+const TOTAL=37348;
+const ACTIVE_SUPPLIERS=2221;
+const MONTHS=['','Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
+const MONTHS_SHORT=['','J','F','M','A','M','J','J','A','S','O','N','D'];
+const YEAR_COLORS={2020:'#3498db',2021:'#2ecc71',2022:'#f39c12',2023:'#9b59b6',2024:'#e74c3c'};
+const fmt=n=>n.toString().replace(/\B(?=(\d{3})+(?!\d))/g,'.');
+const fmtPct=n=>{if(n===null)return'N/A';return(n>=0?'+':'')+n.toFixed(1).replace('.',',')}+'%';
+let activeYear=null,activeMonth=null;
+const $=id=>document.getElementById(id);
+function sumYear(y){return DATA[y]?DATA[y].slice(1).reduce((a,b)=>a+b,0):0;}
+function getMonthVal(y,m){return DATA[y]?DATA[y][m]||0:0;}
+function update(){const y=activeYear,m=activeMonth;
+let total,curVal,prevVal,curLabel,prevLabel,curYear,prevYear;
+if(!y){total=TOTAL;curYear=2024;prevYear=2023;curVal=YEARLY[2024];prevVal=YEARLY[2023];curLabel='2024';prevLabel='2023';}else if(!m){total=YEARLY[y]||0;curYear=parseInt(y);prevYear=curYear-1;curVal=YEARLY[curYear]||0;prevVal=YEARLY[prevYear]||0;curLabel=curYear.toString();prevLabel=prevYear.toString();}else{curYear=parseInt(y);prevYear=curYear-1;curVal=getMonthVal(curYear,m);prevVal=getMonthVal(prevYear,m);total=curVal;const mName=MONTHS[m].substring(0,3);curLabel=mName+' '+curYear;prevLabel=mName+' '+prevYear;}
+$('kpiTotal').textContent=fmt(total);
+$('kpiTotalLabel').textContent=!y?'Alle Jahre':(!m?'Jahr '+y:MONTHS[m]+' '+y);
+$('currentLabel').textContent=curLabel;
+$('currentValue').textContent=fmt(curVal);
+$('prevLabel').textContent=prevLabel;
+$('prevValue').textContent=fmt(prevVal);
+const diff=curVal-prevVal;
+const diffColor=diff>=0?'#2ecc71':'#e74c3c';
+$('diffAbs').textContent=(diff>=0?'+':'−')+fmt(Math.abs(diff))+' RFQs';
+$('diffAbs').style.color=diffColor;
+if(prevVal===0){$('diffPct').textContent='N/A';$('diffPct').style.color='#999';}else{const pct=((curVal-prevVal)/prevVal)*100;$('diffPct').textContent=fmtPct(pct);$('diffPct').style.color=diffColor;}
+renderBarChart(y,m,curYear,prevYear);
+renderPieChart(y,m,curYear,prevYear);
+renderComboChart(y,m,curYear,prevYear);
+renderTable(curYear,prevYear,m);
+let statusText;
+if(!y)statusText='📊 Zeige: Alle Daten ('+fmt(total)+' RFQs)';else if(!m)statusText='✅ Zeige: Jahr '+y+' ('+fmt(total)+' RFQs)';else statusText='✅ Zeige: '+MONTHS[m]+' '+y+' ('+fmt(total)+' RFQs)';
+$('statusBox').textContent=statusText;}
+function renderBarChart(y,m,curYear,prevYear){
+const container=$('barChart');
+let data=[],colors=[],labels=[];
+if(!y){for(let yr=2020;yr<=2024;yr++){data.push(YEARLY[yr]);colors.push(YEAR_COLORS[yr]);labels.push(yr.toString());}$('barTitle').textContent='RFQs pro Jahr';}else if(!m){data=[YEARLY[prevYear]||0,YEARLY[curYear]||0];colors=['#e74c3c','#2ecc71'];labels=[prevYear.toString(),curYear.toString()];$('barTitle').textContent=curYear+' vs. '+prevYear;}else{const mName=MONTHS[m].substring(0,3);data=[getMonthVal(prevYear,m),getMonthVal(curYear,m)];colors=['#e74c3c','#2ecc71'];labels=[mName+' '+prevYear,mName+' '+curYear];$('barTitle').textContent=MONTHS[m]+' '+curYear+' vs. '+MONTHS[m]+' '+prevYear;}
+const max=Math.max(...data)*1.2||100;
+const w=380,h=260,pad=50,barW=(w-pad*2)/data.length*0.6,gap=(w-pad*2)/data.length;
+let svg='<svg viewBox="0 0 '+w+' '+h+'">';
+const gridLines=5;
+for(let i=0;i<=gridLines;i++){const yPos=h-pad-(i/gridLines)*(h-pad*2);const val=Math.round(max*i/gridLines/1000);svg+='<line x1="'+pad+'" y1="'+yPos+'" x2="'+(w-20)+'" y2="'+yPos+'" stroke="#eee" stroke-width="1"/>';svg+='<text x="'+(pad-5)+'" y="'+(yPos+4)+'" text-anchor="end" font-size="10" fill="#999">'+val+'K</text>';}
+data.forEach((v,i)=>{const barH=(v/max)*(h-pad*2);const x=pad+i*gap+(gap-barW)/2;const yBar=h-pad-barH;svg+='<rect x="'+x+'" y="'+yBar+'" width="'+barW+'" height="'+barH+'" fill="'+colors[i]+'" rx="4"/>';svg+='<text x="'+(x+barW/2)+'" y="'+(yBar-5)+'" text-anchor="middle" font-size="11" font-weight="600" fill="#333">'+fmt(v)+'</text>';svg+='<text x="'+(x+barW/2)+'" y="'+(h-pad+20)+'" text-anchor="middle" font-size="11" fill="#555">'+labels[i]+'</text>';});
+svg+='</svg>';
+container.innerHTML=svg;}
+function renderPieChart(y,m,curYear,prevYear){
+const container=$('pieChart');
+let data=[],colors=[],labels=[];
+if(!y){for(let yr=2020;yr<=2024;yr++){data.push(YEARLY[yr]);colors.push(YEAR_COLORS[yr]);labels.push(yr.toString());}$('pieTitle').textContent='Verteilung nach Jahr';}else if(!m){data=[YEARLY[curYear]||0,YEARLY[prevYear]||0];colors=['#2ecc71','#e74c3c'];labels=[curYear.toString(),prevYear.toString()];$('pieTitle').textContent=curYear+' vs. '+prevYear;}else{const mName=MONTHS[m].substring(0,3);data=[getMonthVal(curYear,m),getMonthVal(prevYear,m)];colors=['#2ecc71','#e74c3c'];labels=[mName+' '+curYear,mName+' '+prevYear];$('pieTitle').textContent=MONTHS[m]+' '+curYear+' vs. '+MONTHS[m]+' '+prevYear;}
+const total=data.reduce((a,b)=>a+b,0)||1;
+const cx=190,cy=130,r=90;
+let svg='<svg viewBox="0 0 380 280">';
+let startAngle=-Math.PI/2;
+data.forEach((v,i)=>{if(v===0)return;const pct=v/total;const angle=pct*2*Math.PI;const endAngle=startAngle+angle;const largeArc=angle>Math.PI?1:0;const x1=cx+r*Math.cos(startAngle),y1=cy+r*Math.sin(startAngle);const x2=cx+r*Math.cos(endAngle),y2=cy+r*Math.sin(endAngle);const midAngle=startAngle+angle/2;const labelR=r*0.65;const lx=cx+labelR*Math.cos(midAngle),ly=cy+labelR*Math.sin(midAngle);svg+='<path d="M'+cx+','+cy+' L'+x1+','+y1+' A'+r+','+r+' 0 '+largeArc+',1 '+x2+','+y2+' Z" fill="'+colors[i]+'"/>';if(pct>0.05){svg+='<text x="'+lx+'" y="'+ly+'" text-anchor="middle" font-size="10" fill="#fff" font-weight="600">'+(pct*100).toFixed(1)+'%</text>';}startAngle=endAngle;});
+let legendY=250;
+data.forEach((v,i)=>{const pct=(v/total*100).toFixed(1);const lx=40+i*120;svg+='<rect x="'+lx+'" y="'+(legendY-8)+'" width="12" height="12" fill="'+colors[i]+'" rx="2"/>';svg+='<text x="'+(lx+16)+'" y="'+legendY+'" font-size="10" fill="#555">'+labels[i]+': '+fmt(v)+' ('+pct+'%)</text>';});
+svg+='</svg>';
+container.innerHTML=svg;}
+function renderComboChart(y,m,curYear,prevYear){
+const container=$('comboChart');
+const legend=$('comboLegend');
+if(!y){container.innerHTML='<div class="placeholder">📅 Wählen Sie ein Jahr und klicken Sie \'Ausführen\'</div>';legend.style.display='none';return;}
+legend.style.display='flex';
+$('legendCurrent').textContent=curYear+' (Balken)';
+$('legendPrev').textContent=prevYear+' (Linie)';
+$('comboTitle').textContent='Monatlicher Vergleich '+curYear+' vs. '+prevYear;
+const curData=[],prevData=[];
+for(let i=1;i<=12;i++){curData.push(getMonthVal(curYear,i));prevData.push(getMonthVal(prevYear,i));}
+const max=Math.max(...curData,...prevData)*1.2||100;
+const w=900,h=320,padL=50,padR=30,padT=40,padB=50;
+const chartW=w-padL-padR,chartH=h-padT-padB;
+const barW=chartW/12*0.5,gap=chartW/12;
+let svg='<svg viewBox="0 0 '+w+' '+h+'">';
+for(let i=0;i<=4;i++){const yPos=padT+chartH-(i/4)*chartH;const val=Math.round(max*i/4/100)*100;svg+='<line x1="'+padL+'" y1="'+yPos+'" x2="'+(w-padR)+'" y2="'+yPos+'" stroke="#eee" stroke-width="1"/>';svg+='<text x="'+(padL-8)+'" y="'+(yPos+4)+'" text-anchor="end" font-size="10" fill="#999">'+(val>=1000?(val/1000)+'K':val)+'</text>';}
+curData.forEach((v,i)=>{const barH=(v/max)*chartH;const x=padL+i*gap+(gap-barW)/2;const yBar=padT+chartH-barH;const isHighlight=m&&parseInt(m)===i+1;const fill=isHighlight?'#a8e6cf':'#2ecc71';const stroke=isHighlight?'#2ecc71':'none';const strokeW=isHighlight?2:0;svg+='<rect x="'+x+'" y="'+yBar+'" width="'+barW+'" height="'+barH+'" fill="'+fill+'" stroke="'+stroke+'" stroke-width="'+strokeW+'" rx="3"/>';svg+='<text x="'+(x+barW/2)+'" y="'+(yBar-5)+'" text-anchor="middle" font-size="9" fill="#2ecc71" font-weight="600">'+fmt(v)+'</text>';svg+='<text x="'+(x+barW/2)+'" y="'+(h-padB+20)+'" text-anchor="middle" font-size="10" fill="#555">'+MONTHS_SHORT[i+1]+'</text>';});
+let linePath='M';
+prevData.forEach((v,i)=>{const x=padL+i*gap+gap/2;const y=padT+chartH-(v/max)*chartH;linePath+=(i===0?'':' L')+x+','+y;});
+svg+='<path d="'+linePath+'" fill="none" stroke="#e74c3c" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>';
+prevData.forEach((v,i)=>{const x=padL+i*gap+gap/2;const y=padT+chartH-(v/max)*chartH;svg+='<circle cx="'+x+'" cy="'+y+'" r="4" fill="#e74c3c"/>';svg+='<text x="'+x+'" y="'+(y-8)+'" text-anchor="middle" font-size="8" fill="#e74c3c">'+fmt(v)+'</text>';});
+svg+='</svg>';
+container.innerHTML=svg;}
+function renderTable(curYear,prevYear,highlightMonth){
+const tbody=$('tableBody');
+$('thCurrent').textContent=curYear+' 🟢';
+$('thPrev').textContent=prevYear+' 🔴';
+let html='';
+for(let i=1;i<=12;i++){const cur=getMonthVal(curYear,i);const prev=getMonthVal(prevYear,i);const diff=cur-prev;const diffClass=diff>=0?'diff-positive':'diff-negative';const diffText=(diff>=0?'+':'−')+fmt(Math.abs(diff));const rowClass=highlightMonth&&parseInt(highlightMonth)===i?'highlight':'';html+='<tr class="'+rowClass+'"><td>'+MONTHS[i]+'</td><td>'+fmt(cur)+'</td><td>'+fmt(prev)+'</td><td class="'+diffClass+'">'+diffText+'</td></tr>';}
+tbody.innerHTML=html;}
+$('yearFilter').addEventListener('change',function(){const m=$('monthFilter');if(this.value){m.disabled=false;}else{m.value='';m.disabled=true;}});
+$('btnExecute').addEventListener('click',function(){activeYear=$('yearFilter').value||null;activeMonth=$('monthFilter').value||null;update();});
+$('btnReset').addEventListener('click',function(){$('yearFilter').value='';$('monthFilter').value='';$('monthFilter').disabled=true;activeYear=null;activeMonth=null;update();});
+update();
+</script>
 </body>
 </html>
